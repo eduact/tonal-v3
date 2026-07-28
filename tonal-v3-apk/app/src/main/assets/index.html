@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Tonal — Your Wardrobe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ─────────────────────────────────────────────────────────── */
+:root {
+  --bg:      #f4efe6;
+  --bg2:     #ede5d8;
+  --surface: #faf7f2;
+  --border:  rgba(90,65,30,.10);
+  --border2: rgba(90,65,30,.20);
+  --text:    #18110a;
+  --text2:   #6b5840;
+  --text3:   #a08c72;
+  --accent:  #c84a1a;
+  --green:   #2a8a50;
+  --ok:      #2a8a50;
+  --warn:    #c84a1a;
+  --warn2:   #c8922a;
+  --fd: 'Cormorant Garamond', serif;
+  --fb: 'DM Sans', sans-serif;
+  --fm: 'DM Mono', monospace;
+  --nav-h: 50px;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; overflow:hidden; }
+body { background:var(--bg); color:var(--text); font-family:var(--fb); font-size:14px; display:flex; flex-direction:column; max-width:480px; margin:0 auto; }
+
+/* scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:99px; }
+
+/* ── NAV ─────────────────────────────────────────────────────────────── */
+nav {
+  height:var(--nav-h);
+  background:var(--surface);
+  border-bottom:1px solid var(--border2);
+  display:flex; align-items:stretch;
+  flex-shrink:0;
+}
+.nav-brand {
+  font-family:var(--fd); font-style:italic; font-size:1.05rem;
+  color:var(--text); display:flex; align-items:center;
+  padding:0 1.2rem; border-right:1px solid var(--border2);
+  flex-shrink:0;
+}
+.nav-tabs { display:flex; align-items:stretch; flex:1; }
+.nav-tab {
+  flex:1; background:none; border:none; border-bottom:2px solid transparent;
+  font-family:var(--fb); font-size:10px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--text3); cursor:pointer; transition:color .15s,border-color .15s;
+  padding:0 4px;
+}
+.nav-tab:hover { color:var(--text2); }
+.nav-tab.active { color:var(--text); border-bottom-color:var(--text); font-weight:500; }
+
+/* ── SCREENS ─────────────────────────────────────────────────────────── */
+.screen { display:none; flex-direction:column; height:calc(100vh - var(--nav-h)); overflow-y:auto; overflow-x:hidden; }
+.screen.active { display:flex; }
+.screen-header { padding:20px 20px 14px; flex-shrink:0; }
+.screen-header h1 { font-family:var(--fd); font-size:1.7rem; font-weight:400; color:var(--text); }
+.screen-header p  { font-size:.78rem; color:var(--text3); margin-top:3px; font-weight:300; }
+
+/* ── CLOSET SCREEN ───────────────────────────────────────────────────── */
+.closet-stats {
+  margin:0 20px 14px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  padding:12px 16px;
+  display:flex; gap:0;
+  flex-shrink:0;
+}
+.cstat { flex:1; display:flex; flex-direction:column; gap:2px; align-items:center; }
+.cstat-val { font-family:var(--fd); font-size:1.4rem; color:var(--text); }
+.cstat-lbl { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text3); }
+.cstat + .cstat { border-left:1px solid var(--border); }
+
+/* ── CLOSET ACCORDION ── */
+.closet-section { padding:0 20px 10px; flex-shrink:0; }
+
+/* collapsed header row */
+.cs-header {
+  display:flex; align-items:center; gap:10px;
+  padding:13px 16px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  margin-bottom:0;
+  cursor:pointer;
+  transition:background .15s;
+  user-select:none;
+}
+.cs-header:hover { background:var(--bg2); }
+.cs-header.open  { border-radius:var(--radius) var(--radius) 0 0; border-bottom-color:transparent; background:var(--bg2); }
+.cs-icon  { color:var(--text2); display:flex; align-items:center; }
+.cs-title { font-family:var(--fd); font-size:1.05rem; font-weight:400; flex:1; }
+.cs-owned-dots { display:flex; gap:3px; align-items:center; flex-wrap:wrap; max-width:120px; }
+.cs-owned-dot  { width:12px; height:12px; border-radius:3px; border:1px solid rgba(0,0,0,.1); flex-shrink:0; }
+.cs-chevron    { color:var(--text3); font-size:.8rem; transition:transform .2s; }
+.cs-header.open .cs-chevron { transform:rotate(180deg); }
+.cs-edit-btn {
+  background:none; border:1px solid var(--border2); border-radius:6px;
+  color:var(--text3); font-family:var(--fb); font-size:.68rem;
+  padding:3px 9px; cursor:pointer; transition:all .15s;
+}
+.cs-edit-btn:hover { border-color:var(--text); color:var(--text); }
+
+/* expanded panel */
+.cs-panel {
+  background:var(--surface);
+  border:1px solid var(--border2); border-top:none;
+  border-radius:0 0 var(--radius) var(--radius);
+  overflow:hidden;
+  display:none;
+  margin-bottom:10px;
+}
+.cs-panel.open { display:block; }
+.cs-panel-inner { padding:14px 16px 0; }
+
+/* save button inside panel */
+.cs-save-btn {
+  display:block; width:100%;
+  padding:10px; margin-top:12px;
+  background:var(--text); color:var(--bg);
+  border:none; border-radius:0 0 var(--radius) var(--radius);
+  font-family:var(--fb); font-size:.8rem; font-weight:500;
+  cursor:pointer; letter-spacing:.3px;
+  transition:opacity .15s;
+}
+.cs-save-btn:hover { opacity:.82; }
+
+/* color family rows inside panel */
+.closet-families { display:flex; flex-direction:column; gap:10px; }
+.cf-row { display:flex; align-items:flex-start; gap:8px; }
+.cf-name { font-size:.64rem; color:var(--text3); width:68px; flex-shrink:0; text-transform:capitalize; font-family:var(--fm); padding-top:4px; }
+.cf-shades { display:flex; gap:3px; flex-wrap:wrap; }
+.cf-swatch {
+  width:22px; height:22px; border-radius:4px; cursor:pointer;
+  border:2px solid transparent; flex-shrink:0;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1), border-color .1s;
+  position:relative;
+}
+.cf-swatch:hover { transform:scale(1.2) translateY(-2px); z-index:5; }
+.cf-swatch.owned { border:2.5px solid var(--text); transform:scale(1.1); box-shadow:0 2px 8px rgba(0,0,0,.15); }
+.cf-tip {
+  position:absolute; bottom:calc(100%+4px); left:50%; transform:translateX(-50%);
+  background:var(--text); color:#fff; font-family:var(--fm); font-size:8px;
+  padding:2px 5px; border-radius:3px; white-space:nowrap;
+  pointer-events:none; opacity:0; transition:opacity .12s; z-index:20;
+}
+.cf-swatch:hover .cf-tip { opacity:1; }
+
+/* ── COMBINATIONS SCREEN ─────────────────────────────────────────────── */
+.combo-empty-state {
+  padding:40px 20px; text-align:center;
+  font-family:var(--fd); font-style:italic;
+  color:var(--text3); font-size:1.05rem; line-height:1.6;
+}
+.combo-count-bar {
+  padding:10px 20px 14px;
+  display:flex; align-items:baseline; gap:8px;
+  flex-shrink:0;
+}
+.combo-count-num { font-family:var(--fd); font-size:1.8rem; color:var(--text); }
+.combo-count-lbl { font-size:.72rem; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+
+/* ── PICKER (3-step) ─────────────────────────────────────────────────── */
+.picker-wrap { padding:0 20px 20px; }
+.picker-crumb {
+  display:flex; align-items:center; gap:6px;
+  font-size:.7rem; color:var(--text3);
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.pc-step { color:var(--text2); }
+.pc-active { color:var(--text); font-weight:500; }
+.pc-sep { color:var(--border2); }
+.pc-reset {
+  margin-left:auto; background:none; border:1px solid var(--border2);
+  border-radius:5px; color:var(--text3); font-family:var(--fb);
+  font-size:.66rem; padding:3px 9px; cursor:pointer;
+}
+.pc-reset:hover { border-color:var(--accent); color:var(--accent); }
+
+/* step 1 — type tiles */
+.pck-type-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.pck-type-btn {
+  background:var(--surface); border:1.5px solid var(--border2);
+  border-radius:var(--radius); padding:18px 12px 14px;
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  cursor:pointer; color:var(--text); transition:border-color .15s, background .15s;
+  font-family:var(--fb);
+}
+.pck-type-btn:hover { border-color:var(--text2); background:var(--bg2); }
+.pck-type-icon { color:var(--text2); }
+.pck-type-label { font-size:.8rem; font-weight:500; }
+.pck-type-sub { font-size:.64rem; color:var(--text3); }
+
+/* step 2 — color grid */
+.pck-color-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.pck-color-btn {
+  background:var(--surface); border:1.5px solid var(--border2);
+  border-radius:var(--radius); padding:14px 8px 12px;
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  cursor:pointer; transition:border-color .15s, background .15s;
+  font-family:var(--fb);
+}
+.pck-color-btn:hover { border-color:var(--text2); background:var(--bg2); }
+.pck-circle {
+  display:block; width:38px; height:38px; border-radius:50%;
+  border:2px solid rgba(0,0,0,.10); flex-shrink:0;
+}
+.pck-color-name { font-size:.7rem; font-weight:500; color:var(--text); text-align:center; line-height:1.3; }
+.pck-color-cnt { font-size:.6rem; color:var(--text3); }
+
+/* step 3 — result cards */
+.pck-results { display:flex; flex-direction:column; gap:10px; }
+.pr-card {
+  background:var(--surface); border:1.5px solid var(--border2);
+  border-radius:var(--radius); overflow:visible; cursor:pointer;
+  transition:border-color .15s;
+}
+.pr-card:hover { border-color:var(--text2); }
+.pr-selected { border-color:var(--text) !important; }
+.pr-blocked { opacity:.35; cursor:not-allowed; pointer-events:none; }
+.pr-top {
+  padding:10px 14px 8px; display:flex; align-items:center;
+  gap:8px; border-bottom:1px solid var(--border); flex-wrap:wrap;
+}
+.pr-num { font-family:var(--fd); font-size:1rem; color:var(--text); flex:1; }
+.pr-score { font-family:var(--fm); font-size:.68rem; color:var(--text3); }
+.pr-ok   { font-size:.65rem; color:var(--green); }
+.pr-warn { font-size:.65rem; color:var(--warn); }
+.pr-mild { font-size:.65rem; color:var(--warn2); }
+
+/* result table */
+.pr-table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
+.pr-table tr td:first-child { border-right:1px solid var(--border); }
+.pr-table tr:first-child td { border-bottom:1px solid var(--border); }
+.pr-table tr:last-child td:first-child { border-bottom-left-radius:var(--radius-sm); }
+.pr-table tr:last-child td:last-child  { border-bottom-right-radius:var(--radius-sm); }
+.pr-td { padding:10px 12px; background:var(--surface); width:50%; vertical-align:middle; }
+.pr-td-hl { background:rgba(40,100,60,.07); }
+.pr-selected .pr-td { background:var(--bg2); }
+.pr-selected .pr-td-hl { background:rgba(40,100,60,.12); }
+.pr-dot-td {
+  display:inline-block; width:20px; height:20px; border-radius:50%;
+  border:1.5px solid rgba(0,0,0,.10); vertical-align:middle; flex-shrink:0;
+}
+.pr-td-text { display:inline-flex; flex-direction:column; gap:2px; vertical-align:middle; margin-left:9px; }
+.pr-type { font-size:.54rem; text-transform:uppercase; letter-spacing:.9px; color:var(--text3); font-weight:500; }
+.pr-val  { font-size:.76rem; font-weight:500; color:var(--text); }
+
+/* ── COMBINATION DETAIL / FIGURE VIEW ────────────────────────────────── */
+.detail-overlay {
+  position:fixed; inset:0; background:rgba(244,239,230,.96);
+  z-index:200; display:flex; flex-direction:column;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+  max-width:480px; margin:0 auto;
+}
+.detail-overlay.open { opacity:1; pointer-events:all; }
+.detail-header {
+  padding:14px 20px; display:flex; align-items:center; gap:12px;
+  border-bottom:1px solid var(--border2); flex-shrink:0;
+}
+.detail-back {
+  background:none; border:none; cursor:pointer;
+  font-size:1.1rem; color:var(--text2); padding:4px 8px;
+}
+.detail-title { font-family:var(--fd); font-size:1.15rem; color:var(--text); flex:1; }
+.gender-toggle { display:flex; border:1px solid var(--border2); border-radius:7px; overflow:hidden; }
+.gtbtn {
+  padding:6px 12px; background:none; border:none;
+  font-family:var(--fb); font-size:.72rem; cursor:pointer;
+  color:var(--text3); transition:all .15s;
+}
+.gtbtn.active { background:var(--text); color:#fff; }
+
+.detail-body { flex:1; overflow-y:auto; padding:16px 20px 24px; display:flex; flex-direction:column; gap:16px; }
+.detail-figure-wrap { display:flex; justify-content:center; }
+.detail-figure-wrap svg { filter:drop-shadow(0 6px 20px rgba(0,0,0,.10)); }
+
+/* harmony score display in detail */
+.detail-harmony {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--radius); padding:12px 16px;
+}
+.dh-label { font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-bottom:6px; }
+.dh-score { font-family:var(--fd); font-size:2rem; font-weight:400; line-height:1; }
+.dh-bar-track { height:4px; background:var(--bg2); border-radius:99px; margin:8px 0 6px; overflow:hidden; }
+.dh-bar-fill { height:100%; border-radius:99px; transition:width .5s; }
+.dh-verdict { font-family:var(--fd); font-style:italic; font-size:.9rem; color:var(--text2); }
+
+/* piece summary in detail */
+.detail-pieces { display:flex; flex-direction:column; gap:8px; }
+.dp-row {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:10px 12px;
+  cursor:pointer; transition:border-color .15s;
+}
+.dp-row:hover { border-color:var(--text2); }
+.dp-dot { width:28px; height:28px; border-radius:6px; border:1.5px solid rgba(0,0,0,.10); flex-shrink:0; }
+.dp-info { flex:1; }
+.dp-type { font-size:.62rem; text-transform:uppercase; letter-spacing:1px; color:var(--text3); }
+.dp-color { font-size:.88rem; font-weight:500; color:var(--text); }
+
+/* wear history in detail */
+.detail-wear-section { }
+.dw-label { font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
+.dw-list { display:flex; flex-direction:column; gap:6px; }
+.dw-item { display:flex; justify-content:space-between; align-items:center;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 12px; font-size:.8rem; }
+.dw-del { background:none; border:none; cursor:pointer; color:var(--text3); font-size:.72rem; }
+.dw-del:hover { color:var(--warn); }
+.dw-empty { font-family:var(--fd); font-style:italic; color:var(--text3); font-size:.9rem; }
+
+.detail-actions { display:flex; flex-direction:column; gap:8px; flex-shrink:0; padding:0 20px 20px; }
+
+/* ── SUGGESTIONS SCREEN ──────────────────────────────────────────────── */
+.suggestions-list { padding:0 20px 24px; display:flex; flex-direction:column; gap:14px; }
+.sug-card {
+  background:var(--surface); border:1.5px solid var(--border2);
+  border-radius:var(--radius); overflow:hidden;
+}
+.sug-header {
+  padding:12px 16px; display:flex; align-items:center; gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.sug-rank {
+  font-family:var(--fd); font-size:1.6rem; color:var(--text3);
+  width:28px; flex-shrink:0; line-height:1;
+}
+.sug-info { flex:1; }
+.sug-piece { font-size:.68rem; text-transform:uppercase; letter-spacing:1px; color:var(--text3); }
+.sug-color { font-size:1rem; font-weight:500; color:var(--text); margin-top:2px; }
+.sug-dot { width:36px; height:36px; border-radius:8px; border:2px solid rgba(0,0,0,.10); flex-shrink:0; }
+.sug-unlock {
+  padding:8px 16px; background:rgba(42,138,80,.06);
+  font-size:.72rem; color:var(--green); font-weight:500;
+  border-bottom:1px solid var(--border);
+}
+.sug-preview-toggle {
+  padding:8px 16px; display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; font-size:.72rem; color:var(--text2);
+  border-bottom:1px solid var(--border);
+}
+.sug-preview-toggle:hover { background:var(--bg2); }
+.sug-decline-row {
+  padding:8px 16px 10px;
+  display:flex; justify-content:flex-end;
+  border-top:1px solid var(--border);
+}
+.sug-decline-btn {
+  background:none; border:1px solid var(--border2); border-radius:6px;
+  color:var(--text3); font-family:var(--fb); font-size:.7rem;
+  padding:4px 12px; cursor:pointer; transition:all .15s;
+  display:flex; align-items:center; gap:5px;
+}
+.sug-decline-btn:hover { border-color:var(--warn); color:var(--warn); }
+.sug-card.declined-anim {
+  opacity:0; transform:translateX(20px);
+  transition:opacity .3s, transform .3s;
+  pointer-events:none;
+}
+/* manage declined panel */
+.declined-panel {
+  margin:0 20px 14px;
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--radius); overflow:hidden;
+  flex-shrink:0;
+}
+.declined-panel-header {
+  padding:10px 14px; display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; border-bottom:1px solid var(--border);
+}
+.declined-panel-header span { font-size:.72rem; color:var(--text3); }
+.declined-panel-header strong { font-size:.72rem; color:var(--text2); }
+.declined-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; border-bottom:1px solid var(--border);
+}
+.declined-item:last-child { border-bottom:none; }
+.declined-dot { width:28px; height:28px; border-radius:6px; border:1.5px solid rgba(0,0,0,.1); flex-shrink:0; }
+.declined-info { flex:1; font-size:.78rem; color:var(--text2); }
+.declined-type { font-size:.62rem; text-transform:uppercase; letter-spacing:.8px; color:var(--text3); }
+.declined-restore {
+  background:none; border:1px solid var(--border2); border-radius:6px;
+  color:var(--text3); font-family:var(--fb); font-size:.68rem;
+  padding:3px 9px; cursor:pointer; transition:all .15s;
+}
+.declined-restore:hover { border-color:var(--ok); color:var(--ok); }
+.sug-combos { padding:10px 16px 14px; display:flex; flex-direction:column; gap:8px; display:none; }
+.sug-combos.open { display:flex; }
+.sug-combo-item {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 10px; background:var(--bg);
+  border:1px solid var(--border); border-radius:var(--radius-sm);
+}
+.sug-combo-num { font-family:var(--fd); font-size:.9rem; color:var(--text2); min-width:64px; }
+.sug-combo-swatches { display:flex; gap:4px; }
+.sug-combo-dot { width:16px; height:16px; border-radius:4px; border:1px solid rgba(0,0,0,.10); flex-shrink:0; }
+.sug-combo-score { font-family:var(--fm); font-size:.65rem; color:var(--text3); margin-left:auto; }
+
+/* ── TODAY / PLAN SCREEN ─────────────────────────────────────────────── */
+.today-hero {
+  background:var(--surface); border-bottom:1px solid var(--border2);
+  padding:20px 20px 18px; flex-shrink:0;
+}
+.today-lbl { font-size:.64rem; text-transform:uppercase; letter-spacing:2px; color:var(--text3); margin-bottom:4px; }
+.today-date { font-family:var(--fd); font-size:1.4rem; color:var(--text); margin-bottom:16px; }
+.today-combo-wrap {
+  background:var(--bg); border:1px solid var(--border2);
+  border-radius:var(--radius); overflow:hidden;
+}
+.today-empty { padding:28px 20px; text-align:center; font-family:var(--fd); font-style:italic; color:var(--text3); font-size:.95rem; }
+.today-combo-header { padding:11px 14px 9px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+.today-combo-num { font-family:var(--fd); font-size:1rem; color:var(--text); }
+.today-combo-score { font-family:var(--fm); font-size:.68rem; color:var(--text3); }
+.status-chip { font-size:.6rem; font-weight:500; letter-spacing:.8px; text-transform:uppercase; padding:3px 9px; border-radius:99px; }
+.chip-planned { background:rgba(42,100,200,.08); color:#2a64c8; }
+.chip-worn    { background:rgba(42,138,80,.10); color:var(--green); }
+
+.today-actions { padding:14px 20px; display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+
+/* plan week */
+.week-nav { padding:0 20px 12px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.week-lbl { flex:1; text-align:center; font-size:.8rem; color:var(--text2); }
+.week-arrow { background:var(--surface); border:1px solid var(--border2); border-radius:7px; color:var(--text2); width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; }
+.week-arrow:hover { border-color:var(--text); color:var(--text); }
+.autofill-bar { margin:0 20px 12px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.autofill-bar p { flex:1; font-size:.76rem; color:var(--text2); line-height:1.4; }
+.autofill-bar p strong { color:var(--text); }
+.plan-days { padding:0 20px 24px; display:flex; flex-direction:column; gap:8px; }
+.plan-day { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius); overflow:hidden; }
+.plan-day.has-plan { border-color:rgba(90,65,30,.30); }
+.plan-day.is-today { border-color:var(--text); }
+.plan-day.is-past { opacity:.5; }
+.pdc-top { padding:10px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+.pdc-date { flex-shrink:0; width:38px; text-align:center; }
+.pdc-dow { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text3); }
+.pdc-day { font-family:var(--fd); font-size:1.1rem; color:var(--text2); }
+.pdc-day.today { color:var(--text); }
+.pdc-info { flex:1; }
+.pdc-combo-num { font-size:.72rem; font-weight:500; color:var(--text); margin-bottom:2px; }
+.pdc-pieces { font-size:.68rem; color:var(--text3); }
+.pdc-empty { font-size:.78rem; color:var(--text3); font-family:var(--fd); font-style:italic; }
+.pdc-mini { display:flex; gap:4px; }
+.pdc-mini-dot { width:14px; height:14px; border-radius:3px; border:1px solid rgba(0,0,0,.1); }
+.pdc-actions { padding:8px 14px; display:flex; gap:8px; align-items:center; }
+
+/* section title */
+.section-title { padding:14px 20px 8px; font-size:.62rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); flex-shrink:0; }
+.upcoming-list { padding:0 20px 24px; display:flex; flex-direction:column; gap:8px; }
+.upcoming-item { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:0; display:flex; overflow:hidden; }
+.upcoming-date-col { flex-shrink:0; width:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 0; border-right:1px solid var(--border); }
+.upcoming-dow { font-size:.58rem; text-transform:uppercase; letter-spacing:1px; color:var(--text3); }
+.upcoming-day { font-family:var(--fd); font-size:1.1rem; color:var(--text2); }
+.upcoming-body { flex:1; padding:10px 12px; }
+.upcoming-num { font-size:.72rem; font-weight:500; color:var(--text); margin-bottom:4px; }
+.upcoming-mini { display:flex; gap:4px; }
+.upcoming-mini-dot { width:12px; height:12px; border-radius:3px; border:1px solid rgba(0,0,0,.08); }
+.upcoming-empty { color:var(--text3); font-size:.78rem; font-family:var(--fd); font-style:italic; padding:14px; }
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────── */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 16px; border-radius:var(--radius-sm); border:none; font-family:var(--fb); font-size:.8rem; font-weight:500; cursor:pointer; transition:opacity .15s; white-space:nowrap; letter-spacing:.2px; }
+.btn:hover { opacity:.82; }
+.btn:active { opacity:.65; }
+.btn-primary { background:var(--text); color:var(--bg); }
+.btn-secondary { background:var(--text2); color:var(--surface); }
+.btn-ghost { background:transparent; border:1px solid var(--border2); color:var(--text2); }
+.btn-ghost:hover { border-color:var(--text); color:var(--text); opacity:1; }
+.btn-confirm { background:var(--green); color:#fff; }
+.btn-danger { background:transparent; border:1px solid rgba(200,74,26,.3); color:var(--warn); }
+.btn-sm { padding:6px 12px; font-size:.74rem; border-radius:7px; }
+.btn-full { width:100%; }
+.btn-disabled { opacity:.35; pointer-events:none; }
+
+/* ── TOAST ───────────────────────────────────────────────────────────── */
+.toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(12px);
+  background:var(--text); color:var(--bg); padding:9px 18px; border-radius:99px;
+  font-size:.8rem; opacity:0; transition:opacity .2s,transform .2s;
+  white-space:nowrap; z-index:400; pointer-events:none;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══════════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-brand">Tonal</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="nav-closet"  onclick="goScreen('closet')">Closet</button>
+    <button class="nav-tab"        id="nav-combos"  onclick="goScreen('combos')">Wardrobe</button>
+    <button class="nav-tab"        id="nav-suggest" onclick="goScreen('suggest')">Suggest</button>
+    <button class="nav-tab"        id="nav-today"   onclick="goScreen('today')">Planner</button>
+  </div>
+</nav>
+
+<!-- ══ CLOSET SCREEN ═════════════════════════════════════════════════════ -->
+<div id="screen-closet" class="screen active">
+  <div class="screen-header">
+    <h1>My Closet</h1>
+    <p>Tap a shade to add it. Tap again to remove.</p>
+  </div>
+
+  <div class="closet-stats">
+    <div class="cstat"><div class="cstat-val" id="cs-pieces">0</div><div class="cstat-lbl">Pieces</div></div>
+    <div class="cstat"><div class="cstat-val" id="cs-combos">0</div><div class="cstat-lbl">Combinations</div></div>
+    <div class="cstat"><div class="cstat-val" id="cs-score">—</div><div class="cstat-lbl">Avg score</div></div>
+  </div>
+
+  <div id="closet-sections"></div>
+</div>
+
+<!-- ══ COMBINATIONS SCREEN ══════════════════════════════════════════════ -->
+<div id="screen-combos" class="screen">
+  <div class="screen-header">
+    <h1>Wardrobe</h1>
+    <p>All outfits scoring 85+ from your closet.</p>
+  </div>
+  <div class="combo-count-bar">
+    <div class="combo-count-num" id="combo-count">0</div>
+    <div class="combo-count-lbl">valid combinations</div>
+  </div>
+  <div class="picker-wrap" id="picker-wrap"></div>
+</div>
+
+<!-- ══ SUGGESTIONS SCREEN ═══════════════════════════════════════════════ -->
+<div id="screen-suggest" class="screen">
+  <div class="screen-header">
+    <h1>Suggestions</h1>
+    <p>Best pieces to add — ranked by combinations unlocked.</p>
+  </div>
+  <div id="declined-panel-wrap"></div>
+  <div class="suggestions-list" id="suggestions-list"></div>
+</div>
+
+<!-- ══ TODAY / PLAN SCREEN ══════════════════════════════════════════════ -->
+<div id="screen-today" class="screen">
+  <div class="today-hero">
+    <div class="today-lbl">Today's Outfit</div>
+    <div class="today-date" id="today-date-lbl">—</div>
+    <div class="today-combo-wrap" id="today-combo-wrap">
+      <div class="today-empty">No outfit planned. Auto-recommend or pick one below.</div>
+    </div>
+  </div>
+  <div class="today-actions" id="today-actions">
+    <button class="btn btn-primary btn-full" onclick="openAutoRecommend()">✦ Auto-recommend for today</button>
+    <button class="btn btn-ghost btn-full"   onclick="openPickerModal(null)">Browse & pick manually</button>
+  </div>
+  <div class="section-title">Upcoming planned outfits</div>
+  <div class="upcoming-list" id="upcoming-list"></div>
+  <div class="section-title">Plan this week</div>
+  <div class="week-nav">
+    <button class="week-arrow" onclick="shiftWeek(-1)">‹</button>
+    <div class="week-lbl" id="week-lbl">—</div>
+    <button class="week-arrow" onclick="shiftWeek(1)">›</button>
+  </div>
+  <div class="autofill-bar">
+    <p>Auto-fill the week — <strong>no trouser or jacket repeats</strong> guaranteed.</p>
+    <button class="btn btn-secondary btn-sm" onclick="doAutoFillWeek()">Auto-fill</button>
+  </div>
+  <div class="plan-days" id="plan-days"></div>
+</div>
+
+<!-- ══ COMBINATION DETAIL OVERLAY ═══════════════════════════════════════ -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-header">
+    <button class="detail-back" onclick="closeDetail()">←</button>
+    <div class="detail-title" id="detail-title">Combo #—</div>
+    <div class="gender-toggle">
+      <button class="gtbtn active" id="gtbtn-man"   onclick="setGender('man')">Man</button>
+      <button class="gtbtn"        id="gtbtn-woman" onclick="setGender('woman')">Woman</button>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-figure-wrap" id="detail-figure"></div>
+    <div class="detail-harmony" id="detail-harmony"></div>
+    <div class="detail-pieces" id="detail-pieces"></div>
+    <div class="detail-wear-section">
+      <div class="dw-label">Wear history</div>
+      <div class="dw-list" id="detail-wear-list"></div>
+    </div>
+  </div>
+  <div class="detail-actions" id="detail-actions"></div>
+</div>
+
+<!-- ══ PICKER MODAL ══════════════════════════════════════════════════════ -->
+<div style="position:fixed;inset:0;background:rgba(244,239,230,.9);z-index:300;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;max-width:480px;margin:0 auto;" id="picker-overlay">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:18px 18px 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;transform:translateY(30px);transition:transform .25s cubic-bezier(.34,1.56,.64,1);" id="picker-sheet">
+    <div style="width:34px;height:4px;background:var(--border2);border-radius:99px;margin:10px auto 0;flex-shrink:0;"></div>
+    <div style="padding:12px 18px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="font-family:var(--fd);font-size:1.1rem;" id="picker-title">Pick an Outfit</div>
+      <div style="font-size:.76rem;color:var(--text3);margin-top:2px;" id="picker-sub"></div>
+    </div>
+    <div style="padding:14px 18px;overflow-y:auto;flex:1;" id="picker-body"></div>
+    <div style="padding:10px 18px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;" id="picker-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ COLOR FAMILIES — 12 × 15 shades ══════════════════════════════════════
+const COLOR_FAMILIES = [
+  {name:'red',          shades:['#180202','#2c0404','#420707','#5c0c0c','#921515','#c43030','#e26262','#ea7e7e','#f09a9a','#f5b0b0','#f8c4c4','#fad4d4','#fdeaea','#fef8f8','#fffafa']},
+  {name:'orange',       shades:['#1e0c00','#300e00','#461600','#5e2000','#923e00','#c46c28','#e89c5a','#f0b476','#f5c692','#f8d4aa','#fadfc0','#fbe8d0','#fdf3ea','#fefbf8','#fffdfb']},
+  {name:'yellow',       shades:['#161000','#261c00','#382a00','#4c3800','#7c6200','#b29400','#dcc040','#e8d060','#f0de7e','#f4e898','#f7eeb0','#f9f3c4','#fdf9e4','#fefdf5','#fffefb']},
+  {name:'green',        shades:['#011208','#021c0c','#032814','#04381e','#086234','#0e9452','#24c87a','#42d892','#66e4aa','#88eec0','#a8f4d2','#c0f7e2','#e4fcf4','#f7fefc','#fbfffd']},
+  {name:'teal',         shades:['#001212','#001e1e','#002a2a','#003838','#006060','#009090','#20bcbc','#3cd0d0','#60e0e0','#86ecec','#a8f4f4','#c0f8f8','#e4fcfc','#f6fefe','#fafffe']},
+  {name:'blue',         shades:['#020410','#040a1e','#08122e','#0e1e44','#1c3e74','#2e6aaa','#50a0da','#6ebcee','#90d0f6','#aedcfa','#c4e7fc','#d6effe','#eef8ff','#f9fdff','#fcfeff']},
+  {name:'indigo',       shades:['#060214','#0e0626','#160a3a','#200e52','#3c1e8a','#663ebf','#9878e4','#b098ee','#c8b6f4','#d8ccf8','#e4defb','#eee8fd','#f7f5ff','#fcfaff','#fefcff']},
+  {name:'rose',         shades:['#160406','#260810','#380e1a','#4c1426','#7c2240','#b03c6a','#da6698','#e880ae','#f09cc4','#f5b4d6','#f8c8e4','#fadaee','#fdf0f9','#fefafd','#fffcfe']},
+  {name:'brown',        shades:['#0e0502','#1c0a04','#2c1008','#3e180c','#682e1a','#985036','#c28268','#d29e88','#deb6a4','#e8c8bc','#f0d8ce','#f5e4dc','#faf3f0','#fdfaf8','#fefefd']},
+  {name:'warm-neutral', shades:['#1a1208','#2a1e10','#3c2c18','#503c24','#7e6444','#b09070','#d4bca2','#e0ccb8','#e8d8ca','#f0e4d8','#f4ebe2','#f7f0ea','#fbf7f3','#fefcf9','#fffefb']},
+  {name:'taupe',        shades:['#0c0c0a','#181614','#252220','#34302e','#565250','#7e7a78','#a8a6a4','#bcbab8','#cccac8','#d8d6d4','#e2e0de','#eae8e6','#f5f3f2','#fbfafa','#fefefe']},
+  {name:'slate',        shades:['#080810','#10101c','#181830','#222240','#3c3c64','#62628e','#9090b8','#a8a8ca','#bdbdd8','#cccce2','#d8d8ec','#e2e2f3','#f0f0fa','#f9f9fe','#fdfdfff']},
+];
+
+// ══ HARMONY MATRIX ════════════════════════════════════════════════════════
+const HARMONY = (() => {
+  var n = COLOR_FAMILIES.map(f=>f.name), R = {};
+  n.forEach(a=>{R[a]={};n.forEach(b=>{R[a][b]=0;});});
+  var lk=(a,b,s)=>{R[a][b]=s;R[b][a]=s;};
+  lk('red','orange',.88);lk('red','rose',.90);lk('red','brown',.75);lk('red','warm-neutral',.72);lk('red','taupe',.70);lk('red','slate',.75);lk('red','indigo',.68);lk('red','blue',.72);lk('red','yellow',.60);
+  lk('orange','yellow',.90);lk('orange','brown',.92);lk('orange','warm-neutral',.88);lk('orange','taupe',.78);lk('orange','blue',.78);lk('orange','slate',.70);lk('orange','green',.62);
+  lk('yellow','green',.80);lk('yellow','teal',.64);lk('yellow','brown',.80);lk('yellow','warm-neutral',.78);lk('yellow','taupe',.72);lk('yellow','slate',.62);
+  lk('green','teal',.92);lk('green','blue',.75);lk('green','indigo',.65);lk('green','taupe',.68);lk('green','slate',.72);lk('green','warm-neutral',.62);
+  lk('teal','blue',.90);lk('teal','indigo',.78);lk('teal','slate',.80);lk('teal','taupe',.64);lk('teal','rose',.64);
+  lk('blue','indigo',.92);lk('blue','slate',.85);lk('blue','taupe',.64);lk('blue','rose',.66);lk('blue','warm-neutral',.62);
+  lk('indigo','rose',.76);lk('indigo','slate',.80);lk('indigo','taupe',.62);
+  lk('rose','red',.90);lk('rose','brown',.72);lk('rose','warm-neutral',.74);lk('rose','taupe',.72);lk('rose','slate',.68);
+  lk('brown','warm-neutral',.94);lk('brown','taupe',.90);lk('brown','slate',.78);lk('brown','orange',.92);
+  lk('warm-neutral','taupe',.94);lk('warm-neutral','slate',.88);lk('warm-neutral','brown',.94);
+  lk('taupe','slate',.92);
+  n.forEach(a=>{R[a][a]=1.0;});
+  return R;
+})();
+
+// ══ PIECE TYPES ══════════════════════════════════════════════════════════
+var PIECE_TYPES = [
+  {key:'trousers', label:'Trousers', garment:'pants',  svgIds:{man:['m-pants-l','m-pants-r'],woman:['w-pants-l','w-pants-r']}},
+  {key:'shoes',    label:'Shoes',    garment:'shoes',  svgIds:{man:['m-shoe-body-l','m-shoe-body-r'],woman:['w-shoe-body-l','w-shoe-body-r']}},
+  {key:'shirt',    label:'Shirt',    garment:'shirt',  svgIds:{man:['m-shirt-body','m-shirt-sleeve-l','m-shirt-sleeve-r'],woman:['w-shirt-body','w-shirt-sleeve-l','w-shirt-sleeve-r']}},
+  {key:'jacket',   label:'Jacket',   garment:'jacket', svgIds:{man:['m-coat-l','m-coat-r','m-coat-sleeve-l','m-coat-sleeve-r'],woman:['w-coat-l','w-coat-r','w-coat-sleeve-l','w-coat-sleeve-r']}},
+];
+
+var PIECE_SVGS = {
+  trousers: '<svg width="24" height="30" viewBox="0 0 30 44" fill="currentColor" opacity=".5" stroke="currentColor" stroke-width="1.5"><path d="M2 0H28L24 24L22 44H16L15 24L14 44H8L6 24Z"/></svg>',
+  shoes:    '<svg width="30" height="16" viewBox="0 0 44 24" fill="currentColor" opacity=".5" stroke="currentColor" stroke-width="1.5"><path d="M4 20C4 20 2 18 2 14C2 10 6 6 10 6H24L36 8L42 12V20H4Z"/><rect x="2" y="20" width="40" height="3" rx="1.5" opacity=".5"/></svg>',
+  shirt:    '<svg width="26" height="28" viewBox="0 0 36 36" fill="currentColor" opacity=".5" stroke="currentColor" stroke-width="1.5"><path d="M6 4L0 10V36H36V10L30 4L24 8V36H12V8Z"/><path d="M14 4C14 4 15.5 8 18 8C20.5 8 22 4 22 4" fill="none"/></svg>',
+  jacket:   '<svg width="26" height="32" viewBox="0 0 36 44" fill="currentColor" opacity=".5" stroke="currentColor" stroke-width="1.5"><path d="M4 6L0 14V36H36V14L32 6L26 10V36H10V10Z"/><path d="M12 6C12 6 14 10 18 10C22 10 24 6 24 6" fill="none"/></svg>',
+};
+
+// ══ STORAGE ═══════════════════════════════════════════════════════════════
+var SK_CLOSET   = 'tv3_closet';
+var SK_HISTORY  = 'tv3_history';
+var SK_PLAN     = 'tv3_plan';
+var SK_DECLINED = 'tv3_declined'; // [{piece, shade, pieceLabel}]
+
+function load(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d;}catch{return d;}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+var closet   = load(SK_CLOSET,   {trousers:[],shoes:[],shirt:[],jacket:[]});
+var history  = load(SK_HISTORY,  {});
+var plan     = load(SK_PLAN,     {});
+var declined = load(SK_DECLINED, []); // [{piece, shade, pieceLabel}]
+
+function declineShade(piece, shade, pieceLabel){
+  if(!declined.find(d=>d.piece===piece&&d.shade===shade)){
+    declined.push({piece, shade, pieceLabel});
+    save(SK_DECLINED, declined);
+  }
+}
+function restoreShade(piece, shade){
+  declined = declined.filter(d=>!(d.piece===piece&&d.shade===shade));
+  save(SK_DECLINED, declined);
+}
+function isDeclined(piece, shade){
+  return !!declined.find(d=>d.piece===piece&&d.shade===shade);
+}
+
+function comboKey(c){ return c.trousers+'|'+c.shoes+'|'+c.shirt+'|'+c.jacket; }
+function getWears(key){ return history[key]||[]; }
+function getLastWorn(key){ var w=getWears(key); return w.length?w[w.length-1]:null; }
+function addWear(key,ds){ if(!history[key])history[key]=[]; if(!history[key].includes(ds)){history[key].push(ds);history[key].sort();} save(SK_HISTORY,history); }
+function removeWear(key,ds){ if(!history[key])return; history[key]=history[key].filter(d=>d!==ds); save(SK_HISTORY,history); }
+
+// ══ COLOR HELPERS ═════════════════════════════════════════════════════════
+function getFam(hex){ for(var f of COLOR_FAMILIES) if(f.shades.includes(hex)) return f.name; return null; }
+function getIdx(hex){ for(var f of COLOR_FAMILIES){var i=f.shades.indexOf(hex);if(i!==-1)return i;} return -1; }
+function darken(hex,a){ var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return '#'+[Math.max(0,r-a),Math.max(0,g-a),Math.max(0,b-a)].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+
+// ══ HARMONY SCORING ═══════════════════════════════════════════════════════
+// Per-piece weights (trouser-shoe most important)
+var PAIR_WEIGHTS = {
+  'trousers-shoes': 1.3,
+  'trousers-shirt': 1.0,
+  'shirt-jacket':   0.9,
+  'trousers-jacket':0.8,
+  'shoes-jacket':   0.5,
+  'shoes-shirt':    0.4,
+};
+
+function scorePair(hexA, hexB){
+  var fa=getFam(hexA), fb=getFam(hexB);
+  var ia=getIdx(hexA), ib=getIdx(hexB);
+  if(!fa||!fb) return 0.7;
+  var hScore = HARMONY[fa][fb];
+  // Contrast bonus: pieces from different lightness zones look better
+  var contrast = Math.abs(ia-ib)/14;
+  var contrastScore = contrast<.15?0.55:contrast<.3?0.75:contrast<.5?0.90:1.0;
+  // Same family: penalize if too close in shade
+  if(fa===fb && Math.abs(ia-ib)<3) hScore *= 0.75;
+  return hScore*0.55 + contrastScore*0.45;
+}
+
+function scoreCombo(c){
+  var pairs = [
+    ['trousers','shoes'],['trousers','shirt'],['shirt','jacket'],
+    ['trousers','jacket'],['shoes','jacket'],['shoes','shirt'],
+  ];
+  var total=0, weights=0;
+  for(var [a,b] of pairs){
+    var key = a+'-'+b;
+    var w = PAIR_WEIGHTS[key]||0.5;
+    total  += scorePair(c[a],c[b])*w;
+    weights+= w;
+  }
+  return Math.round((total/weights)*100);
+}
+
+// ══ GENERATE COMBINATIONS ═════════════════════════════════════════════════
+var _combosCache = null;
+var _closetSnapshot = null;
+
+function generateCombos(){
+  var snap = JSON.stringify(closet);
+  if(snap === _closetSnapshot && _combosCache) return _combosCache;
+  _closetSnapshot = snap;
+
+  if(!closet.trousers.length||!closet.shoes.length||!closet.shirt.length||!closet.jacket.length){
+    _combosCache = []; return [];
+  }
+
+  var combos = [];
+  var id = 1;
+  for(var tr of closet.trousers)
+    for(var sh of closet.shoes)
+      for(var sr of closet.shirt)
+        for(var jk of closet.jacket){
+          var c={id:id++, trousers:tr, shoes:sh, shirt:sr, jacket:jk};
+          c.score = scoreCombo(c);
+          c.key   = comboKey(c);
+          if(c.score >= 85) combos.push(c);
+        }
+  combos.sort((a,b)=>b.score-a.score);
+  _combosCache = combos;
+  return combos;
+}
+
+// ══ DATE HELPERS ══════════════════════════════════════════════════════════
+function isoDate(d){return d.toISOString().split('T')[0];}
+function todayStr(){return isoDate(new Date());}
+function parseLocal(s){var[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function addDays(s,n){var d=parseLocal(s);d.setDate(d.getDate()+n);return isoDate(d);}
+var MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DO=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var DS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function fmtDate(s){var d=parseLocal(s);return MS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();}
+
+// ══ ALGORITHM (V2 smart repeat prevention) ════════════════════════════════
+function daysSince(ds){if(!ds)return Infinity;return Math.floor((Date.now()-new Date(ds).getTime())/86400000);}
+
+function buildContext(targetDate, extraPlanDates){
+  var entries=[];
+  var combos=generateCombos();
+  combos.forEach(c=>{
+    getWears(c.key).forEach(d=>entries.push({key:c.key,trouser:c.trousers,jacket:c.jacket,date:d}));
+  });
+  if(extraPlanDates) extraPlanDates.forEach(pd=>{
+    if(plan[pd]){
+      var c=combos.find(x=>x.key===plan[pd]);
+      if(c) entries.push({key:c.key,trouser:c.trousers,jacket:c.jacket,date:pd});
+    }
+  });
+  entries.sort((a,b)=>b.date<a.date?-1:b.date>a.date?1:0);
+  return entries.filter(e=>e.date<=targetDate).slice(0,5);
+}
+
+function blockReason(combo, ctx){
+  for(var e of ctx){
+    if(e.trouser===combo.trousers) return 'Same trousers as recent outfit';
+    if(e.jacket===combo.jacket)    return 'Same jacket as recent outfit';
+  }
+  return null;
+}
+
+function comboScore(c){var l=getLastWorn(c.key);return l?daysSince(l):Infinity;}
+
+function buildSmartPool(targetDate, extraPlanDates){
+  var combos  = generateCombos();
+  var usedKeys= Object.values(plan).filter(Boolean);
+  for(var win of [5,3,1]){
+    var ctx  = buildContext(targetDate, extraPlanDates).slice(0,win);
+    var pool = combos.filter(c=>!usedKeys.includes(c.key)&&!blockReason(c,ctx));
+    if(pool.length) return {pool,ctx};
+  }
+  var prev=null;
+  var allDates=extraPlanDates?extraPlanDates.slice():[];
+  if(allDates.length){var pd=allDates[allDates.length-1];if(plan[pd]){var c2=combos.find(x=>x.key===plan[pd]);if(c2)prev=c2;}}
+  var pool2=combos.filter(c=>{
+    if(usedKeys.includes(c.key)) return false;
+    if(prev&&c.trousers===prev.trousers) return false;
+    if(prev&&c.jacket===prev.jacket) return false;
+    return true;
+  });
+  return {pool:pool2.length?pool2:combos.filter(c=>!usedKeys.includes(c.key)), ctx:[]};
+}
+
+function autoRecommend(){
+  var today=todayStr();
+  var plannedDates=Object.keys(plan).filter(d=>d<today&&plan[d]);
+  var result=buildSmartPool(today,plannedDates);
+  result.pool.sort((a,b)=>comboScore(b)-comboScore(a));
+  return result.pool[0]||null;
+}
+
+// ══ SUGGESTIONS ENGINE ════════════════════════════════════════════════════
+function computeSuggestions(){
+  // Returns exactly 1 best suggestion per clothing type (4 total).
+  // Best = highest average harmony score of newly unlocked combos,
+  //        evaluated only on mid-range shades (indices 2-11 of 15).
+  //        Near-whites (idx 12-14) and near-blacks (idx 0-1) are excluded
+  //        because they dominate trivially without adding real wardrobe value.
+  // Tiebreaker = most combos unlocked.
+
+  var existingKeys = new Set(generateCombos().map(c=>c.key));
+  var suggestions  = [];
+  var suggestedShades = new Set(); // prevent same shade across types
+
+  for(var pt of PIECE_TYPES){
+    var key     = pt.key;
+    var current = new Set(closet[key]);
+    var bestForType = null;
+
+    for(var fam of COLOR_FAMILIES){
+      for(var si = 2; si <= 11; si++){   // mid-range shades only (indices 2-11)
+        var shade = fam.shades[si];
+        if(!shade) continue;
+        if(current.has(shade)) continue;
+        if(suggestedShades.has(shade)) continue;
+        if(isDeclined(key, shade)) continue;
+        // Skip shades too close (within 5 steps) to any declined shade in same family
+        var tooClose = false;
+        for(var di=0;di<declined.length;di++){
+          var dec = declined[di];
+          if(dec.piece !== key) continue;
+          // Find declined shade index in this family
+          var decIdx = fam.shades.indexOf(dec.shade);
+          if(decIdx === -1) continue;
+          if(Math.abs(si - decIdx) < 5){ tooClose = true; break; }
+        }
+        if(tooClose) continue;
+
+        // Simulate adding this shade
+        var tempCloset = JSON.parse(JSON.stringify(closet));
+        tempCloset[key].push(shade);
+
+        var savedCloset = closet;
+        closet = tempCloset;
+        _combosCache = null; _closetSnapshot = null;
+        var newCombos = generateCombos();
+        closet = savedCloset;
+        _combosCache = null; _closetSnapshot = null;
+
+        var unlockedCombos = newCombos.filter(c=>!existingKeys.has(c.key));
+        var unlocked = unlockedCombos.length;
+        if(unlocked === 0) continue;
+
+        var avgHarmony = Math.round(
+          unlockedCombos.reduce((s,c)=>s+c.score,0) / unlockedCombos.length
+        );
+
+        if(!bestForType
+          || avgHarmony > bestForType.avgHarmony
+          || (avgHarmony === bestForType.avgHarmony && unlocked > bestForType.unlocked)){
+          bestForType = {
+            piece:      key,
+            pieceLabel: pt.label,
+            shade:      shade,
+            family:     fam.name,
+            unlocked:   unlocked,
+            avgHarmony: avgHarmony,
+            newCombos:  unlockedCombos.sort((a,b)=>b.score-a.score),
+          };
+        }
+      }
+    }
+
+    if(bestForType){
+      suggestions.push(bestForType);
+      suggestedShades.add(bestForType.shade);
+    }
+  }
+
+  suggestions.sort((a,b)=>b.avgHarmony-a.avgHarmony);
+  return suggestions;
+}
+
+// ══ CLOSET SCREEN — accordion ═════════════════════════════════════════════
+var openSection = null; // tracks which section is expanded
+
+function renderCloset(){
+  var sections = document.getElementById('closet-sections');
+  sections.innerHTML = '';
+  PIECE_TYPES.forEach(pt=>{ buildClosetSection(pt, sections); });
+  updateClosetStats();
+}
+
+function buildClosetSection(pt, container){
+  var sec = document.createElement('div');
+  sec.className = 'closet-section';
+  var isOpen = openSection === pt.key;
+  var owned  = closet[pt.key];
+
+  // owned dots preview (shown in collapsed header)
+  var ownedDots = owned.slice(0,10).map(h=>
+    '<div class="cs-owned-dot" style="background:'+h+'"></div>'
+  ).join('');
+  var ownedLabel = owned.length ? owned.length+' colors' : 'None added';
+
+  // header
+  var hdr = document.createElement('div');
+  hdr.className = 'cs-header' + (isOpen?' open':'');
+  hdr.innerHTML =
+    '<div class="cs-icon">' + PIECE_SVGS[pt.key] + '</div>'
+    +'<div class="cs-title">' + pt.label + '</div>'
+    +(owned.length && !isOpen
+      ? '<div class="cs-owned-dots">'+ownedDots+'</div>'
+      : '<span style="font-size:.68rem;color:var(--text3);">'+ownedLabel+'</span>')
+    +'<div class="cs-chevron">'+(isOpen?'▾':'▸')+'</div>';
+
+  hdr.onclick = ()=>{
+    openSection = isOpen ? null : pt.key;
+    renderCloset();
+  };
+
+  sec.appendChild(hdr);
+
+  // panel (expanded)
+  if(isOpen){
+    var panel = document.createElement('div');
+    panel.className = 'cs-panel open';
+
+    var inner = document.createElement('div');
+    inner.className = 'cs-panel-inner';
+
+    // Temp selection state — work on a copy until Save
+    var tempOwned = new Set(owned);
+
+    COLOR_FAMILIES.forEach(fam=>{
+      var row = document.createElement('div');
+      row.className = 'cf-row';
+      var nm = document.createElement('div');
+      nm.className = 'cf-name'; nm.textContent = fam.name;
+      row.appendChild(nm);
+      var shadeRow = document.createElement('div');
+      shadeRow.className = 'cf-shades';
+      fam.shades.forEach(hex=>{
+        var sw = document.createElement('div');
+        sw.className = 'cf-swatch' + (tempOwned.has(hex)?' owned':'');
+        sw.style.background = hex;
+        var tip = document.createElement('div');
+        tip.className = 'cf-tip'; tip.textContent = hex.toUpperCase();
+        sw.appendChild(tip);
+        sw.onclick = (e)=>{
+          e.stopPropagation();
+          if(tempOwned.has(hex)){ tempOwned.delete(hex); sw.classList.remove('owned'); }
+          else                  { tempOwned.add(hex);    sw.classList.add('owned');    }
+        };
+        shadeRow.appendChild(sw);
+      });
+      row.appendChild(shadeRow);
+      inner.appendChild(row);
+    });
+
+    panel.appendChild(inner);
+
+    // Save button
+    var saveBtn = document.createElement('button');
+    saveBtn.className = 'cs-save-btn';
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = ()=>{
+      closet[pt.key] = [...tempOwned];
+      save(SK_CLOSET, closet);
+      _combosCache = null; _closetSnapshot = null;
+      openSection = null; // collapse after save
+      renderCloset();
+      updateClosetStats();
+      showToast(pt.label + ' saved ✓');
+    };
+    panel.appendChild(saveBtn);
+    sec.appendChild(panel);
+  }
+
+  container.appendChild(sec);
+}
+
+function updateClosetStats(){
+  var combos = generateCombos();
+  var totalPieces = Object.values(closet).reduce((s,arr)=>s+arr.length,0);
+  var avgScore = combos.length ? Math.round(combos.reduce((s,c)=>s+c.score,0)/combos.length) : 0;
+  document.getElementById('cs-pieces').textContent = totalPieces;
+  document.getElementById('cs-combos').textContent = combos.length;
+  document.getElementById('cs-score').textContent  = combos.length ? avgScore : '—';
+}
+
+// ══ COMBOS SCREEN — 3-step picker ════════════════════════════════════════
+var pickerStep=1, pickerPiece='', pickerColor='';
+
+function renderCombosScreen(){
+  var combos = generateCombos();
+  document.getElementById('combo-count').textContent = combos.length;
+  pickerStep=1; pickerPiece=''; pickerColor='';
+  var wrap = document.getElementById('picker-wrap');
+  if(!combos.length){
+    wrap.innerHTML = '<div class="combo-empty-state">Add at least one color to each clothing type in your Closet to generate combinations.</div>';
+    return;
+  }
+  renderPickerStep(wrap);
+}
+
+function renderPickerStep(container){
+  var combos = generateCombos();
+  var html = '<div class="picker-crumb">';
+  html += '<span class="pc-step'+(pickerStep===1?' pc-active':'')+'">Type</span>';
+  if(pickerStep>=2){ html += '<span class="pc-sep">›</span><span class="pc-step'+(pickerStep===2?' pc-active':'')+'">'+PIECE_TYPES.find(p=>p.key===pickerPiece).label+'</span>'; }
+  if(pickerStep>=3){ html += '<span class="pc-sep">›</span><span class="pc-step pc-active">'+pickerColor+'</span>'; }
+  if(pickerStep>1)  { html += '<button class="pc-reset" onclick="pickerGoStep(1)">↩ Start over</button>'; }
+  html += '</div>';
+
+  if(pickerStep===1){
+    html += '<div class="pck-type-grid">';
+    PIECE_TYPES.forEach(pt=>{
+      var count = new Set(combos.map(c=>c[pt.key])).size;
+      html += '<button class="pck-type-btn" onclick="pickerGoStep(2,\''+pt.key+'\')">';
+      html += '<span class="pck-type-icon">'+PIECE_SVGS[pt.key]+'</span>';
+      html += '<span class="pck-type-label">'+pt.label+'</span>';
+      html += '<span class="pck-type-sub">'+count+' colors in use</span>';
+      html += '</button>';
+    });
+    html += '</div>';
+  }
+  else if(pickerStep===2){
+    var colors = [...new Set(combos.map(c=>c[pickerPiece]))];
+    html += '<div class="pck-color-grid">';
+    colors.forEach(hex=>{
+      var cnt = combos.filter(c=>c[pickerPiece]===hex).length;
+      html += '<button class="pck-color-btn" onclick="pickerGoStep(3,\''+pickerPiece+'\',\''+hex+'\')">';
+      html += '<span class="pck-circle" style="background:'+hex+'"></span>';
+      var famName = getFam(hex)||'';
+      html += '<span class="pck-color-name">'+famName+'</span>';
+      html += '<span class="pck-color-cnt">'+cnt+' combos</span>';
+      html += '</button>';
+    });
+    html += '</div>';
+  }
+  else {
+    var filtered = combos.filter(c=>c[pickerPiece]===pickerColor);
+    var ctx = buildContext(todayStr(), []);
+    html += '<div style="font-size:.72rem;color:var(--text3);margin-bottom:10px;">'+filtered.length+' combinations with '+pickerColor+' '+PIECE_TYPES.find(p=>p.key===pickerPiece).label.toLowerCase()+'</div>';
+    html += '<div class="pck-results">';
+    filtered.forEach(c=>{
+      var br = blockReason(c, ctx);
+      var l  = getLastWorn(c.key);
+      var ds = daysSince(l);
+      var tag = br ? '<span class="pr-warn">⚠ '+br+'</span>'
+               : !l ? '<span class="pr-ok">✦ Never worn</span>'
+               : ds<=14 ? '<span class="pr-warn">⚠ '+ds+'d ago</span>'
+               : ds<=21 ? '<span class="pr-mild">◎ '+ds+'d ago</span>'
+               : '<span class="pr-ok">✓ '+ds+'d ago</span>';
+
+      var pieces=[{key:'trousers',label:'Trousers',val:c.trousers},{key:'shoes',label:'Shoes',val:c.shoes},{key:'shirt',label:'Shirt',val:c.shirt},{key:'jacket',label:'Jacket',val:c.jacket}];
+      var tbl='<table class="pr-table"><tbody><tr>';
+      pieces.forEach((pc,i)=>{
+        var hl = pc.key===pickerPiece?' pr-td-hl':'';
+        var dot='display:inline-block;width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(0,0,0,.1);vertical-align:middle;background:'+pc.val;
+        tbl+='<td class="pr-td'+hl+'">';
+        tbl+='<span class="pr-dot-td" style="'+dot+'"></span>';
+        tbl+='<span class="pr-td-text"><span class="pr-type">'+pc.label+'</span><span class="pr-val">'+getFam(pc.val)+'</span></span>';
+        tbl+='</td>';
+        if(i===1) tbl+='</tr><tr>';
+      });
+      tbl+='</tr></tbody></table>';
+
+      html+='<div class="pr-card'+(br?' pr-blocked':'')+'" onclick="openDetail(\''+c.key+'\')">';
+      html+='<div class="pr-top"><span class="pr-num">Combo #'+c.id+'</span><span class="pr-score">★ '+c.score+'</span>'+tag+'</div>';
+      html+=tbl+'</div>';
+    });
+    html+='</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function pickerGoStep(step, piece, color){
+  pickerStep  = step;
+  if(piece)  pickerPiece = piece;
+  if(color)  pickerColor = color;
+  if(step===1){ pickerPiece=''; pickerColor=''; }
+  if(step===2){ pickerColor=''; }
+  renderPickerStep(document.getElementById('picker-wrap'));
+}
+
+// ══ COMBINATION DETAIL ════════════════════════════════════════════════════
+var detailCombo = null;
+var detailGender = 'man';
+
+var MAN_SVG = `<svg id="svg-man" width="200" height="350" viewBox="0 0 240 420" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="sg-m" cx="50%" cy="35%" r="65%"><stop offset="0%" stop-color="#f6d9be"/><stop offset="100%" stop-color="#e8bc95"/></radialGradient></defs><ellipse cx="120" cy="44" rx="28" ry="32" fill="url(#sg-m)"/><ellipse cx="120" cy="27" rx="29" ry="19" fill="#2a1a0a"/><rect x="91" y="27" width="8" height="22" rx="4" fill="#2a1a0a"/><rect x="141" y="27" width="8" height="22" rx="4" fill="#2a1a0a"/><rect x="108" y="70" width="24" height="22" rx="5" fill="#e8bc95"/><ellipse cx="91" cy="47" rx="5" ry="7" fill="#d9a87a"/><ellipse cx="149" cy="47" rx="5" ry="7" fill="#d9a87a"/><path id="m-shirt-body" d="M84 90 L72 104 L64 142 L64 268 L176 268 L176 142 L168 104 L156 90 L140 100 L120 100 L100 100 Z" fill="#e8e2d8" stroke="#cec8be" stroke-width="1"/><path id="m-shirt-collar" d="M100 90 L120 115 L140 90 L140 100 L120 122 L100 100 Z" fill="#ddd8ce" stroke="#cec8be" stroke-width=".8"/><path id="m-shirt-sleeve-l" d="M84 90 L72 104 L60 148 L60 198 L76 200 L80 148 L96 100 Z" fill="#e8e2d8" stroke="#cec8be" stroke-width="1"/><path id="m-shirt-sleeve-r" d="M156 90 L168 104 L180 148 L180 198 L164 200 L160 148 L144 100 Z" fill="#e8e2d8" stroke="#cec8be" stroke-width="1"/><path id="m-coat-l" d="M84 90 L60 110 L52 152 L52 230 L60 230 L90 230 L96 195 L98 145 L104 112 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><path id="m-coat-r" d="M156 90 L180 110 L188 152 L188 230 L180 230 L150 230 L144 195 L142 145 L136 112 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><path id="m-coat-lapel-l" d="M120 90 L104 112 L98 145 L108 134 L118 120 Z" fill="#b4ac9c" stroke="#a09890" stroke-width=".8"/><path id="m-coat-lapel-r" d="M120 90 L136 112 L142 145 L132 134 L122 120 Z" fill="#b4ac9c" stroke="#a09890" stroke-width=".8"/><path id="m-coat-collar" d="M100 88 L120 82 L140 88 L136 112 L120 102 L104 112 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width=".8"/><path d="M104 112 L112 122 M136 112 L128 122" stroke="#a8a098" stroke-width=".8" fill="none"/><path id="m-coat-sleeve-l" d="M84 90 L60 110 L50 152 L50 204 L68 208 L72 154 L82 106 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><path id="m-coat-sleeve-r" d="M156 90 L180 110 L190 152 L190 204 L172 208 L168 154 L158 106 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><circle cx="58" cy="196" r="2.5" fill="#888" opacity=".35"/><circle cx="58" cy="203" r="2.5" fill="#888" opacity=".35"/><circle cx="182" cy="196" r="2.5" fill="#888" opacity=".35"/><circle cx="182" cy="203" r="2.5" fill="#888" opacity=".35"/><circle cx="116" cy="185" r="4" fill="#888" opacity=".35"/><circle cx="116" cy="212" r="4" fill="#888" opacity=".35"/><rect x="56" y="192" width="28" height="4" rx="1.5" fill="#a8a098" opacity=".4"/><ellipse cx="48" cy="210" rx="10" ry="13" fill="#e8bc95"/><ellipse cx="192" cy="210" rx="10" ry="13" fill="#e8bc95"/><path id="m-pants-l" d="M88 266 L82 358 L100 358 L120 278 L120 266 Z" fill="#3a4a5c" stroke="#2c3a4c" stroke-width="1"/><path id="m-pants-r" d="M152 266 L158 358 L140 358 L120 278 L120 266 Z" fill="#3a4a5c" stroke="#2c3a4c" stroke-width="1"/><rect id="m-pants-waist" x="88" y="261" width="64" height="11" rx="2" fill="#304058" stroke="#2c3a4c" stroke-width=".8"/><rect x="88" y="228" width="64" height="7" rx="2" fill="#8a8478" opacity=".5"/><path id="m-shoe-body-l" d="M78 358 L75 370 L56 375 L52 381 L52 388 L104 388 L104 358 Z" fill="#2a2018" stroke="#1a1208" stroke-width="1"/><rect id="m-shoe-sole-l" x="52" y="386" width="52" height="5" rx="2" fill="#141008"/><path id="m-shoe-body-r" d="M162 358 L165 370 L184 375 L188 381 L188 388 L136 388 L136 358 Z" fill="#2a2018" stroke="#1a1208" stroke-width="1"/><rect id="m-shoe-sole-r" x="136" y="386" width="52" height="5" rx="2" fill="#141008"/><ellipse cx="108" cy="47" rx="4.5" ry="5.5" fill="#fff" opacity=".92"/><ellipse cx="132" cy="47" rx="4.5" ry="5.5" fill="#fff" opacity=".92"/><ellipse cx="109" cy="48" rx="2.8" ry="3.2" fill="#3a2010"/><ellipse cx="133" cy="48" rx="2.8" ry="3.2" fill="#3a2010"/><path d="M111 60 Q120 67 129 60" stroke="#c07a6a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M103 40 Q108 38 113 40" stroke="#2a1a0a" stroke-width="1.1" fill="none"/><path d="M127 40 Q132 38 137 40" stroke="#2a1a0a" stroke-width="1.1" fill="none"/></svg>`;
+
+var WOMAN_SVG = `<svg id="svg-woman" width="200" height="350" viewBox="0 0 240 420" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="sg-w" cx="50%" cy="35%" r="65%"><stop offset="0%" stop-color="#f6d9be"/><stop offset="100%" stop-color="#e8bc95"/></radialGradient></defs><ellipse cx="120" cy="42" rx="26" ry="30" fill="url(#sg-w)"/><ellipse cx="120" cy="26" rx="27" ry="18" fill="#6b3a28"/><path d="M93 28 Q84 58 88 88" stroke="#6b3a28" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M147 28 Q156 58 152 88" stroke="#6b3a28" stroke-width="14" fill="none" stroke-linecap="round"/><rect x="109" y="67" width="22" height="20" rx="5" fill="#e8bc95"/><ellipse cx="93" cy="44" rx="5" ry="6" fill="#d9a87a"/><ellipse cx="147" cy="44" rx="5" ry="6" fill="#d9a87a"/><path id="w-shirt-body" d="M88 86 L76 100 L70 136 L70 262 L170 262 L170 136 L164 100 L152 86 L136 96 L120 96 L104 96 Z" fill="#e8e2d8" stroke="#cec8be" stroke-width="1"/><path id="w-shirt-collar" d="M104 86 L120 110 L136 86 L136 96 L120 116 L104 96 Z" fill="#ddd8ce" stroke="#cec8be" stroke-width=".8"/><path id="w-shirt-sleeve-l" d="M88 86 L76 100 L66 140 L66 188 L80 190 L84 142 L98 96 Z" fill="#e8e2d8" stroke="#cec8be" stroke-width="1"/><path id="w-shirt-sleeve-r" d="M152 86 L164 100 L174 140 L174 188 L160 190 L156 142 L142 96 Z" fill="#e8e2d8" stroke="#cec8be" stroke-width="1"/><path id="w-coat-l" d="M88 86 L64 106 L58 148 L60 184 L66 210 L72 234 L92 234 L97 205 L96 172 L98 142 L104 110 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><path id="w-coat-r" d="M152 86 L176 106 L182 148 L180 184 L174 210 L168 234 L148 234 L143 205 L144 172 L142 142 L136 110 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><path id="w-coat-lapel-l" d="M120 86 L104 110 L98 142 L108 130 L118 118 Z" fill="#b4ac9c" stroke="#a09890" stroke-width=".8"/><path id="w-coat-lapel-r" d="M120 86 L136 110 L142 142 L132 130 L122 118 Z" fill="#b4ac9c" stroke="#a09890" stroke-width=".8"/><path id="w-coat-collar" d="M102 84 L120 78 L138 84 L136 110 L120 100 L104 110 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width=".8"/><path d="M104 110 L112 120 M136 110 L128 120" stroke="#a8a098" stroke-width=".8" fill="none"/><path id="w-coat-sleeve-l" d="M88 86 L64 106 L56 148 L56 192 L70 196 L74 150 L86 102 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><path id="w-coat-sleeve-r" d="M152 86 L176 106 L184 148 L184 192 L170 196 L166 150 L154 102 Z" fill="#c8c0b0" stroke="#a8a098" stroke-width="1"/><circle cx="64" cy="185" r="2" fill="#888" opacity=".35"/><circle cx="64" cy="191" r="2" fill="#888" opacity=".35"/><circle cx="176" cy="185" r="2" fill="#888" opacity=".35"/><circle cx="176" cy="191" r="2" fill="#888" opacity=".35"/><circle cx="120" cy="195" r="4" fill="#888" opacity=".35"/><ellipse cx="54" cy="198" rx="9" ry="12" fill="#e8bc95"/><ellipse cx="186" cy="198" rx="9" ry="12" fill="#e8bc95"/><path id="w-pants-l" d="M88 260 L82 350 L100 350 L120 272 L120 260 Z" fill="#3a4a5c" stroke="#2c3a4c" stroke-width="1"/><path id="w-pants-r" d="M152 260 L158 350 L140 350 L120 272 L120 260 Z" fill="#3a4a5c" stroke="#2c3a4c" stroke-width="1"/><rect id="w-pants-waist" x="88" y="255" width="64" height="11" rx="2" fill="#304058" stroke="#2c3a4c" stroke-width=".8"/><path id="w-shoe-body-l" d="M78 350 Q78 362 88 364 L102 364 L102 350 Z" fill="#2a2018" stroke="#1a1208" stroke-width="1"/><rect id="w-shoe-heel-l" x="76" y="361" width="10" height="14" rx="2" fill="#141008"/><path id="w-shoe-body-r" d="M162 350 Q162 362 152 364 L138 364 L138 350 Z" fill="#2a2018" stroke="#1a1208" stroke-width="1"/><rect id="w-shoe-heel-r" x="154" y="361" width="10" height="14" rx="2" fill="#141008"/><ellipse cx="109" cy="43" rx="4" ry="5" fill="#fff" opacity=".92"/><ellipse cx="131" cy="43" rx="4" ry="5" fill="#fff" opacity=".92"/><ellipse cx="110" cy="44" rx="2.6" ry="3" fill="#3a2010"/><ellipse cx="132" cy="44" rx="2.6" ry="3" fill="#3a2010"/><path d="M112 57 Q120 63 128 57" stroke="#c84a7a" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M104 37 Q108 35 112 37" stroke="#5a2a1a" stroke-width="1.1" fill="none"/><path d="M128 37 Q132 35 136 37" stroke="#5a2a1a" stroke-width="1.1" fill="none"/></svg>`;
+
+// SVG part IDs for coloring
+var SVG_PARTS = {
+  trousers:{ man:['m-pants-l','m-pants-r'], woman:['w-pants-l','w-pants-r'], waist:{man:'m-pants-waist',woman:'w-pants-waist'} },
+  shoes:   { man:['m-shoe-body-l','m-shoe-body-r'], woman:['w-shoe-body-l','w-shoe-body-r'] },
+  shirt:   { man:['m-shirt-body','m-shirt-sleeve-l','m-shirt-sleeve-r'], woman:['w-shirt-body','w-shirt-sleeve-l','w-shirt-sleeve-r'],
+             collar:{man:'m-shirt-collar',woman:'w-shirt-collar'} },
+  jacket:  { man:['m-coat-l','m-coat-r','m-coat-sleeve-l','m-coat-sleeve-r'], woman:['w-coat-l','w-coat-r','w-coat-sleeve-l','w-coat-sleeve-r'],
+             lapels:{man:['m-coat-lapel-l','m-coat-lapel-r','m-coat-collar'],woman:['w-coat-lapel-l','w-coat-lapel-r','w-coat-collar']} },
+};
+
+function applyColorsToSVG(combo, gender){
+  var g = gender;
+  // Trousers
+  SVG_PARTS.trousers[g].forEach(id=>{ var el=document.getElementById(id); if(el){el.setAttribute('fill',combo.trousers);el.setAttribute('stroke',darken(combo.trousers,20));}});
+  var wId=SVG_PARTS.trousers.waist[g]; var wEl=document.getElementById(wId); if(wEl){wEl.setAttribute('fill',darken(combo.trousers,24));wEl.setAttribute('stroke',darken(combo.trousers,28));}
+  // Shoes
+  SVG_PARTS.shoes[g].forEach(id=>{ var el=document.getElementById(id); if(el){el.setAttribute('fill',combo.shoes);el.setAttribute('stroke',darken(combo.shoes,20));}});
+  // Shirt
+  SVG_PARTS.shirt[g].forEach(id=>{ var el=document.getElementById(id); if(el){el.setAttribute('fill',combo.shirt);el.setAttribute('stroke',darken(combo.shirt,14));}});
+  var cId=SVG_PARTS.shirt.collar[g]; var cEl=document.getElementById(cId); if(cEl){cEl.setAttribute('fill',darken(combo.shirt,10));}
+  // Jacket
+  SVG_PARTS.jacket[g].forEach(id=>{ var el=document.getElementById(id); if(el){el.setAttribute('fill',combo.jacket);el.setAttribute('stroke',darken(combo.jacket,16));}});
+  SVG_PARTS.jacket.lapels[g].forEach(id=>{ var el=document.getElementById(id); if(el){el.setAttribute('fill',darken(combo.jacket,18));el.setAttribute('stroke',darken(combo.jacket,22));}});
+}
+
+function openDetail(key){
+  var combos = generateCombos();
+  detailCombo = combos.find(c=>c.key===key);
+  if(!detailCombo) return;
+
+  document.getElementById('detail-title').textContent = 'Combo #'+detailCombo.id;
+
+  // Inject SVG
+  var figWrap = document.getElementById('detail-figure');
+  figWrap.innerHTML = MAN_SVG + WOMAN_SVG;
+  document.getElementById('svg-woman').style.display = 'none';
+
+  applyColorsToSVG(detailCombo, 'man');
+
+  // Harmony
+  var sc = detailCombo.score;
+  var barColor = sc>=92?'#1a6630':sc>=85?'#4a7620':sc>=78?'#2a5870':'#7a6618';
+  var verdict  = sc>=92?'Exceptional harmony — a rare composition.'
+               : sc>=88?'Excellent — these pieces sing together.'
+               : sc>=85?'Strong combination — confident and grounded.'
+               : 'Valid combination — some tension, used with intention.';
+  document.getElementById('detail-harmony').innerHTML =
+    '<div class="dh-label">Harmony Score</div>'
+    +'<div class="dh-score" style="color:'+barColor+'">'+sc+'<span style="font-size:.9rem;color:var(--text3)">/100</span></div>'
+    +'<div class="dh-bar-track"><div class="dh-bar-fill" style="width:'+sc+'%;background:'+barColor+'"></div></div>'
+    +'<div class="dh-verdict">'+verdict+'</div>';
+
+  // Pieces
+  var piecesEl = document.getElementById('detail-pieces');
+  piecesEl.innerHTML = '';
+  [{key:'trousers',label:'Trousers'},{key:'shoes',label:'Shoes'},{key:'shirt',label:'Shirt'},{key:'jacket',label:'Jacket'}].forEach(pt=>{
+    var hex = detailCombo[pt.key];
+    var fam = getFam(hex)||'';
+    var row = document.createElement('div');
+    row.className = 'dp-row';
+    row.innerHTML = '<div class="dp-dot" style="background:'+hex+'"></div>'
+      +'<div class="dp-info"><div class="dp-type">'+pt.label+'</div><div class="dp-color">'+fam+' · '+hex+'</div></div>';
+    piecesEl.appendChild(row);
+  });
+
+  // Wear history
+  renderDetailWearList();
+
+  // Actions
+  var today = todayStr();
+  var worn  = getWears(detailCombo.key).includes(today);
+  var acts  = document.getElementById('detail-actions');
+  if(worn){
+    acts.innerHTML = '<div style="text-align:center;color:var(--ok);font-size:.82rem;padding:4px 0">✓ Worn today</div>';
+  } else {
+    acts.innerHTML = '<button class="btn btn-primary btn-full" onclick="confirmWornDetail()">✓ I wore this today</button>'
+      +'<button class="btn btn-ghost btn-full" onclick="planDetailCombo()">Plan for a future day</button>';
+  }
+
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function renderDetailWearList(){
+  if(!detailCombo) return;
+  var wears = getWears(detailCombo.key);
+  var el = document.getElementById('detail-wear-list');
+  if(!wears.length){ el.innerHTML='<div class="dw-empty">Never worn — great choice for today.</div>'; return; }
+  el.innerHTML = [...wears].reverse().map(d=>
+    '<div class="dw-item"><span>'+fmtDate(d)+'</span><button class="dw-del" onclick="delDetailWear(\''+d+'\')">✕</button></div>'
+  ).join('');
+}
+
+function delDetailWear(ds){
+  if(!detailCombo) return;
+  removeWear(detailCombo.key, ds);
+  renderDetailWearList();
+  showToast('Entry removed');
+}
+
+function confirmWornDetail(){
+  if(!detailCombo) return;
+  var today=todayStr();
+  plan[today]=detailCombo.key; save(SK_PLAN,plan);
+  addWear(detailCombo.key, today);
+  openDetail(detailCombo.key);
+  showToast('Outfit logged ✓');
+}
+
+function planDetailCombo(){
+  closeDetail();
+  openPickerModal(null, detailCombo.key);
+}
+
+function setGender(g){
+  detailGender = g;
+  document.getElementById('svg-man').style.display   = g==='man'?'':'none';
+  document.getElementById('svg-woman').style.display = g==='woman'?'':'none';
+  document.getElementById('gtbtn-man').classList.toggle('active',   g==='man');
+  document.getElementById('gtbtn-woman').classList.toggle('active', g==='woman');
+  if(detailCombo) applyColorsToSVG(detailCombo, g);
+}
+
+function closeDetail(){
+  document.getElementById('detail-overlay').classList.remove('open');
+  detailCombo=null;
+}
+
+// ══ SUGGESTIONS SCREEN ════════════════════════════════════════════════════
+function renderSuggestions(){
+  renderDeclinedPanel();
+  var list = document.getElementById('suggestions-list');
+  var sug  = computeSuggestions();
+
+  if(!sug.length){
+    list.innerHTML = '<div class="combo-empty-state">Add pieces to your Closet to get suggestions, or your closet already covers all available combinations.</div>';
+    return;
+  }
+
+  var html = '';
+  for(var i=0;i<sug.length;i++){
+    var s = sug[i];
+
+    // Combo previews with labeled swatches
+    var comboPreviews = '';
+    var preview = s.newCombos.slice(0,5);
+    for(var j=0;j<preview.length;j++){
+      var c = preview[j];
+      var pieces = [
+        {l:'Trousers',h:c.trousers},
+        {l:'Shoes',h:c.shoes},
+        {l:'Shirt',h:c.shirt},
+        {l:'Jacket',h:c.jacket},
+      ];
+      var cells = '';
+      for(var k=0;k<pieces.length;k++){
+        var p = pieces[k];
+        cells += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">'
+          +'<div style="width:20px;height:20px;border-radius:50%;background:'+p.h+';border:1.5px solid rgba(0,0,0,.1);"></div>'
+          +'<div style="font-size:.52rem;color:var(--text3);text-align:center;">'+p.l+'</div>'
+          +'</div>';
+      }
+      comboPreviews += '<div class="sug-combo-item">'
+        +'<div class="sug-combo-num">Combo #'+c.id+' · ★'+c.score+'</div>'
+        +'<div style="display:flex;gap:0;margin-top:6px;">'+cells+'</div>'
+        +'</div>';
+    }
+
+    // Border for light shades
+    var brightness = parseInt(s.shade.slice(1,3),16);
+    var dotBorder  = brightness>220 ? '1.5px solid var(--border2)' : '1.5px solid rgba(0,0,0,.1)';
+
+    // Build card — store piece/shade as data attributes to avoid quote issues
+    html += '<div class="sug-card" data-piece="'+s.piece+'" data-shade="'+s.shade+'" data-label="'+s.pieceLabel+'">'
+      +'<div class="sug-header">'
+      +'<div class="sug-rank">'+(i+1)+'</div>'
+      +'<div class="sug-info">'
+      +'<div class="sug-piece">'+s.pieceLabel+'</div>'
+      +'<div style="font-size:.72rem;color:var(--ok);font-weight:500;margin-top:2px;">Unlocks '+s.unlocked+' combo'+(s.unlocked>1?'s':'')+' · avg ★'+s.avgHarmony+'</div>'
+      +'</div>'
+      +'<div style="width:56px;height:56px;border-radius:50%;background:'+s.shade+';border:'+dotBorder+';flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.12);"></div>'
+      +'</div>'
+      +'<div class="sug-preview-toggle" onclick="toggleSugPreview(this)">▸ See combinations preview</div>'
+      +'<div class="sug-combos">'+comboPreviews+'</div>'
+      +'<div class="sug-decline-row">'
+      +'<button class="sug-decline-btn" onclick="declineSuggestion(this)">✕ Not for me</button>'
+      +'</div>'
+      +'</div>';
+  }
+  list.innerHTML = html;
+}
+
+function toggleSugPreview(el){
+  var combosEl = el.nextElementSibling;
+  var isOpen   = combosEl.classList.toggle('open');
+  el.textContent = (isOpen?'▾':'▸') + ' See combinations preview';
+}
+
+function declineSuggestion(btn){
+  var card       = btn.closest('.sug-card');
+  var piece      = card.dataset.piece;
+  var shade      = card.dataset.shade;
+  var pieceLabel = card.dataset.label;
+  card.classList.add('declined-anim');
+  setTimeout(function(){
+    declineShade(piece, shade, pieceLabel);
+    renderSuggestions();
+    showUndoToast(piece, shade, pieceLabel);
+  }, 320);
+}
+
+// Undo toast — appears for 5s with an Undo button
+var _undoTimer = null;
+function showUndoToast(piece, shade, pieceLabel){
+  clearTimeout(_undoTimer);
+  var t = document.getElementById('toast');
+  var pJs = JSON.stringify(piece), sJs = JSON.stringify(shade);
+  t.innerHTML = pieceLabel + ' color declined &nbsp;'
+    +'<button onclick="undoDecline(' + pJs + ',' + sJs + ')" '
+    +'style="background:none;border:1px solid rgba(255,255,255,.4);border-radius:4px;color:#fff;font-family:var(--fb);font-size:.72rem;padding:2px 8px;cursor:pointer;margin-left:4px;">Undo</button>';
+  t.classList.add('show');
+  _undoTimer = setTimeout(()=>t.classList.remove('show'), 5000);
+}
+
+function undoDecline(piece, shade){
+  clearTimeout(_undoTimer);
+  document.getElementById('toast').classList.remove('show');
+  restoreShade(piece, shade);
+  renderSuggestions();
+  showToast('Color restored ✓');
+}
+
+function renderDeclinedPanel(){
+  var wrap = document.getElementById('declined-panel-wrap');
+  if(!wrap) return;
+  if(!declined.length){ wrap.innerHTML=''; return; }
+
+  var isOpen = wrap.dataset.open === '1';
+  var items = '';
+  for(var di=0;di<declined.length;di++){
+    var d=declined[di];
+    items += '<div class="declined-item" data-piece="'+d.piece+'" data-shade="'+d.shade+'">'
+      +'<div class="declined-dot" style="background:'+d.shade+'"></div>'
+      +'<div class="declined-info"><div class="declined-type">'+d.pieceLabel+'</div></div>'
+      +'<button class="declined-restore" onclick="doRestoreFromEl(this)">Restore</button>'
+      +'</div>';
+  }
+
+  wrap.innerHTML =
+    '<div class="declined-panel">'
+    +'<div class="declined-panel-header" onclick="toggleDeclinedPanel()">'
+    +'<span>Declined colors <strong>('+declined.length+')</strong></span>'
+    +'<span>'+(isOpen?'▾':'▸')+'</span>'
+    +'</div>'
+    +(isOpen?items:'')
+    +'</div>';
+}
+
+function toggleDeclinedPanel(){
+  var wrap = document.getElementById('declined-panel-wrap');
+  wrap.dataset.open = wrap.dataset.open==='1' ? '0' : '1';
+  renderDeclinedPanel();
+}
+
+function doRestore(piece, shade){
+  restoreShade(piece, shade);
+  renderSuggestions();
+  showToast('Color restored ✓');
+}
+function doRestoreFromEl(btn){
+  var item = btn.closest('.declined-item');
+  doRestore(item.dataset.piece, item.dataset.shade);
+}
+
+// ══ TODAY / PLAN SCREEN ═══════════════════════════════════════════════════
+function renderTodayScreen(){
+  var today=todayStr(), d=parseLocal(today);
+  document.getElementById('today-date-lbl').textContent = DO[d.getDay()]+', '+MO[d.getMonth()]+' '+d.getDate();
+
+  var todayKey = plan[today];
+  var combos   = generateCombos();
+  var wrap     = document.getElementById('today-combo-wrap');
+  var acts     = document.getElementById('today-actions');
+
+  if(!todayKey){
+    wrap.innerHTML='<div class="today-empty">No outfit planned today.</div>';
+    acts.innerHTML='<button class="btn btn-primary btn-full" onclick="openAutoRecommend()">✦ Auto-recommend for today</button>'
+      +'<button class="btn btn-ghost btn-full" onclick="openPickerModal(null)">Browse & pick manually</button>';
+  } else {
+    var c    = combos.find(x=>x.key===todayKey);
+    var worn = c&&getWears(c.key).includes(today);
+    if(c){
+      wrap.innerHTML = '<div class="today-combo-header">'
+        +'<span class="today-combo-num">Combo #'+c.id+'</span>'
+        +'<span class="today-combo-score">★ '+c.score+'</span>'
+        +(worn?'<span class="status-chip chip-worn">Worn ✓</span>':'<span class="status-chip chip-planned">Planned</span>')
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--border);">'
+        +[{k:c.trousers,l:'Trousers'},{k:c.shoes,l:'Shoes'},{k:c.shirt,l:'Shirt'},{k:c.jacket,l:'Jacket'}].map(pc=>{
+          return '<div style="background:var(--surface);padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;">'
+            +'<div style="width:30px;height:30px;border-radius:50%;background:'+pc.k+';border:1.5px solid rgba(0,0,0,.1);flex-shrink:0;"></div>'
+            +'<div style="font-size:.54rem;color:var(--text3);text-align:center;text-transform:uppercase;letter-spacing:.8px;">'+pc.l+'</div>'
+            +'<div style="font-size:.68rem;color:var(--text);text-align:center;font-weight:500;">'+(getFam(pc.k)||pc.k)+'</div>'
+            +'</div>';
+        }).join('')+'</div>';
+      if(worn){
+        acts.innerHTML='<div style="text-align:center;color:var(--ok);font-size:.82rem;padding:4px 0">✓ Confirmed worn today</div>'
+          +'<button class="btn btn-ghost btn-full btn-sm" onclick="openPickerModal(null)">Change today\'s outfit</button>';
+      } else {
+        acts.innerHTML='<button class="btn btn-confirm btn-full" onclick="confirmWornToday(\''+c.key+'\')">✓ I wore this today</button>'
+          +'<button class="btn btn-ghost btn-full" onclick="openPickerModal(null)">Change today\'s outfit</button>';
+      }
+    }
+  }
+
+  // Upcoming
+  var upEl = document.getElementById('upcoming-list');
+  var upcoming=[];
+  for(var i=1;i<=14;i++){ var ds=addDays(today,i); if(plan[ds])upcoming.push(ds); if(upcoming.length>=4)break; }
+  upEl.innerHTML = !upcoming.length
+    ? '<div class="upcoming-item"><div class="upcoming-empty">No upcoming outfits planned.</div></div>'
+    : upcoming.map(ds=>{
+        var d2=parseLocal(ds); var c=generateCombos().find(x=>x.key===plan[ds]);
+        if(!c) return '';
+        var upDots=[
+          {h:c.trousers,l:'Trousers'},{h:c.shoes,l:'Shoes'},
+          {h:c.shirt,l:'Shirt'},{h:c.jacket,l:'Jacket'}
+        ].map(p=>
+          '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">'
+          +'<div style="width:16px;height:16px;border-radius:4px;background:'+p.h+';border:1px solid rgba(0,0,0,.1);"></div>'
+          +'<div style="font-size:.5rem;color:var(--text3);text-align:center;">'+p.l+'</div>'
+          +'</div>'
+        ).join('');
+        return '<div class="upcoming-item">'
+          +'<div class="upcoming-date-col"><div class="upcoming-dow">'+DS[d2.getDay()]+'</div><div class="upcoming-day">'+d2.getDate()+'</div></div>'
+          +'<div class="upcoming-body">'
+          +'<div class="upcoming-num" style="margin-bottom:6px;">Combo #'+c.id+' · ★ '+c.score+'</div>'
+          +'<div style="display:flex;gap:4px;">'+upDots+'</div>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+
+  renderPlanWeek();
+}
+
+function confirmWornToday(key){
+  addWear(key,todayStr());
+  renderTodayScreen();
+  showToast('Outfit logged ✓');
+}
+
+// ── Plan week
+var weekOffset=0;
+function getWeekDates(){
+  var today=todayStr(),d=parseLocal(today),dow=d.getDay();
+  var start=new Date(d);
+  start.setDate(d.getDate()-(dow===0?6:dow-1)+weekOffset*7);
+  return Array.from({length:7},(_,i)=>{var day=new Date(start);day.setDate(start.getDate()+i);return isoDate(day);});
+}
+function shiftWeek(delta){weekOffset+=delta;renderPlanWeek();}
+
+function renderPlanWeek(){
+  var dates=getWeekDates(),today=todayStr();
+  var f=parseLocal(dates[0]),l=parseLocal(dates[6]);
+  document.getElementById('week-lbl').textContent=MS[f.getMonth()]+' '+f.getDate()+' – '+MS[l.getMonth()]+' '+l.getDate()+', '+l.getFullYear();
+
+  var combos=generateCombos();
+  document.getElementById('plan-days').innerHTML=dates.map(ds=>{
+    var d=parseLocal(ds),isPast=ds<today,isToday=ds===today;
+    var hasPlan=!!plan[ds]; var c=hasPlan?combos.find(x=>x.key===plan[ds]):null;
+    var worn=c?getWears(c.key).includes(ds):false;
+    var cls='plan-day'+(hasPlan?' has-plan':'')+(isToday?' is-today':'')+(isPast?' is-past':'');
+    // Plan day: labeled mini swatches — dot + type abbreviation
+    var pieces4 = c ? [
+      {h:c.trousers,l:'TR'},{h:c.shoes,l:'SH'},{h:c.shirt,l:'SR'},{h:c.jacket,l:'JK'}
+    ] : [];
+    var dots = pieces4.map(p=>
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">'
+      +'<div style="width:14px;height:14px;border-radius:3px;background:'+p.h+';border:1px solid rgba(0,0,0,.1);"></div>'
+      +'<div style="font-size:.48rem;color:var(--text3);letter-spacing:.5px;">'+p.l+'</div>'
+      +'</div>'
+    ).join('');
+    var info=hasPlan&&c
+      ?'<div class="pdc-info"><div class="pdc-combo-num">Combo #'+c.id+(worn?' ✓':'')+'</div></div>'
+       +'<div class="pdc-mini" style="display:flex;gap:5px;align-items:flex-end;">'+dots+'</div>'
+      :'<div class="pdc-info"><div class="pdc-empty">No outfit planned</div></div>';
+
+    var acts='';
+    if(!isPast){
+      if(!hasPlan) acts='<button class="btn btn-secondary btn-sm" onclick="openPickerModal(\''+ds+'\')">+ Assign</button><button class="btn btn-ghost btn-sm" onclick="quickAutoAssign(\''+ds+'\')">✦ Auto</button>';
+      else if(!worn){
+        acts='<button class="btn btn-ghost btn-sm" onclick="openPickerModal(\''+ds+'\')">Change</button><button class="btn btn-danger btn-sm" onclick="removePlan(\''+ds+'\')">Remove</button>';
+        if(isToday) acts='<button class="btn btn-confirm btn-sm" onclick="confirmWornToday(\''+plan[today]+'\')">✓ Worn</button>'+acts;
+      } else acts='<span style="font-size:.72rem;color:var(--ok)">✓ Confirmed</span>';
+    }
+    return '<div class="'+cls+'"><div class="pdc-top"><div class="pdc-date"><div class="pdc-dow">'+DS[d.getDay()]+'</div><div class="pdc-day'+(isToday?' today':'')+'">'+d.getDate()+'</div></div>'+info+'</div>'+(acts?'<div class="pdc-actions">'+acts+'</div>':'')+'</div>';
+  }).join('');
+}
+
+function removePlan(ds){delete plan[ds];save(SK_PLAN,plan);renderTodayScreen();showToast('Plan removed');}
+function quickAutoAssign(ds){
+  var otherDates=Object.keys(plan).filter(d=>d!==ds&&plan[d]).sort();
+  var result=buildSmartPool(ds,otherDates);
+  result.pool.sort((a,b)=>comboScore(b)-comboScore(a));
+  if(result.pool[0]){plan[ds]=result.pool[0].key;save(SK_PLAN,plan);renderTodayScreen();showToast('Combo #'+result.pool[0].id+' assigned ✓');}
+}
+function doAutoFillWeek(){
+  var dates=getWeekDates(),today=todayStr();
+  dates.forEach(ds=>{
+    if(plan[ds]||ds<today) return;
+    var plannedSoFar=dates.filter(pd=>pd!==ds&&plan[pd]).sort();
+    var result=buildSmartPool(ds,plannedSoFar);
+    result.pool.sort((a,b)=>comboScore(b)-comboScore(a));
+    if(result.pool[0]) plan[ds]=result.pool[0].key;
+  });
+  save(SK_PLAN,plan);renderTodayScreen();showToast('Week auto-filled ✓');
+}
+
+function openAutoRecommend(){
+  var c=autoRecommend();
+  if(!c){showToast('Add more pieces to your closet first.');return;}
+  plan[todayStr()]=c.key; save(SK_PLAN,plan);
+  renderTodayScreen();
+  openDetail(c.key);
+}
+
+// ══ PICKER MODAL ══════════════════════════════════════════════════════════
+var pickerModalDate=null, pickerModalSelected=null;
+var pmStep=1, pmPiece='', pmColor='';
+
+function openPickerModal(ds, preselect){
+  pickerModalDate=ds||todayStr(); pickerModalSelected=preselect||null;
+  pmStep=1; pmPiece=''; pmColor='';
+  var d=parseLocal(pickerModalDate);
+  document.getElementById('picker-sub').textContent=DO[d.getDay()]+', '+MO[d.getMonth()]+' '+d.getDate();
+  var lbl=pickerModalDate===todayStr()?'today':DS[d.getDay()]+' '+d.getDate();
+  renderPickerModal();
+  document.getElementById('picker-footer').innerHTML=
+    '<button class="btn btn-primary btn-full" id="pm-confirm" onclick="doPickerModalConfirm()" disabled style="opacity:.38">Assign to '+lbl+'</button>'
+    +'<button class="btn btn-ghost btn-full" onclick="closePickerModal()">Cancel</button>';
+  var ov=document.getElementById('picker-overlay');
+  var sh=document.getElementById('picker-sheet');
+  ov.style.opacity='1';ov.style.pointerEvents='all';
+  sh.style.transform='translateY(0)';
+}
+
+function closePickerModal(){
+  var ov=document.getElementById('picker-overlay');
+  var sh=document.getElementById('picker-sheet');
+  ov.style.opacity='0';ov.style.pointerEvents='none';
+  sh.style.transform='translateY(30px)';
+}
+
+function renderPickerModal(){
+  var combos=generateCombos();
+  var body=document.getElementById('picker-body');
+  var html='<div class="picker-crumb">';
+  html+='<span class="pc-step'+(pmStep===1?' pc-active':'')+'">Type</span>';
+  if(pmStep>=2){html+='<span class="pc-sep">›</span><span class="pc-step'+(pmStep===2?' pc-active':'')+'">'+PIECE_TYPES.find(p=>p.key===pmPiece).label+'</span>';}
+  if(pmStep>=3){html+='<span class="pc-sep">›</span><span class="pc-step pc-active">'+pmColor+'</span>';}
+  if(pmStep>1) html+='<button class="pc-reset" onclick="pmGoStep(1)">↩ Start over</button>';
+  html+='</div>';
+
+  if(pmStep===1){
+    html+='<div class="pck-type-grid">';
+    PIECE_TYPES.forEach(pt=>{
+      var count=new Set(combos.map(c=>c[pt.key])).size;
+      html+='<button class="pck-type-btn" onclick="pmGoStep(2,\''+pt.key+'\')">'
+        +'<span class="pck-type-icon">'+PIECE_SVGS[pt.key]+'</span>'
+        +'<span class="pck-type-label">'+pt.label+'</span>'
+        +'<span class="pck-type-sub">'+count+' colors</span></button>';
+    });
+    html+='</div>';
+  } else if(pmStep===2){
+    var colors=[...new Set(combos.map(c=>c[pmPiece]))];
+    html+='<div class="pck-color-grid">';
+    colors.forEach(hex=>{
+      var cnt=combos.filter(c=>c[pmPiece]===hex).length;
+      html+='<button class="pck-color-btn" onclick="pmGoStep(3,\''+pmPiece+'\',\''+hex+'\')">'
+        +'<span class="pck-circle" style="background:'+hex+'"></span>'
+        +'<span class="pck-color-name">'+(getFam(hex)||'')+'</span>'
+        +'<span class="pck-color-cnt">'+cnt+' combos</span></button>';
+    });
+    html+='</div>';
+  } else {
+    var filtered=combos.filter(c=>c[pmPiece]===pmColor);
+    var ctx=buildContext(pickerModalDate,[]);
+    html+='<div style="font-size:.72rem;color:var(--text3);margin-bottom:10px;">'+filtered.length+' combinations</div>';
+    html+='<div class="pck-results">';
+    filtered.forEach(c=>{
+      var br=blockReason(c,ctx);
+      var l=getLastWorn(c.key),ds=daysSince(l);
+      var tag=br?'<span class="pr-warn">⚠ '+br+'</span>':!l?'<span class="pr-ok">✦ Never worn</span>':ds<=14?'<span class="pr-warn">'+ds+'d ago</span>':'<span class="pr-ok">'+ds+'d ago</span>';
+      var sel=pickerModalSelected===c.key;
+      var pieces=[{key:'trousers',label:'Trousers',val:c.trousers},{key:'shoes',label:'Shoes',val:c.shoes},{key:'shirt',label:'Shirt',val:c.shirt},{key:'jacket',label:'Jacket',val:c.jacket}];
+      var tbl='<table class="pr-table"><tbody><tr>';
+      pieces.forEach((pc,i)=>{
+        var hl=pc.key===pmPiece?' pr-td-hl':'';
+        tbl+='<td class="pr-td'+hl+'">'
+          +'<span class="pr-dot-td" style="display:inline-block;width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(0,0,0,.1);vertical-align:middle;background:'+pc.val+'"></span>'
+          +'<span class="pr-td-text"><span class="pr-type">'+pc.label+'</span><span class="pr-val">'+(getFam(pc.val)||pc.val)+'</span></span>'
+          +'</td>';
+        if(i===1) tbl+='</tr><tr>';
+      });
+      tbl+='</tr></tbody></table>';
+      html+='<div class="pr-card'+(sel?' pr-selected':'')+(br?' pr-blocked':'')+'" onclick="pmSelectCombo(\''+c.key+'\')">'
+        +'<div class="pr-top"><span class="pr-num">Combo #'+c.id+'</span><span class="pr-score">★ '+c.score+'</span>'+tag+'</div>'
+        +tbl+'</div>';
+    });
+    html+='</div>';
+  }
+  body.innerHTML=html;
+}
+
+function pmGoStep(step,piece,color){
+  pmStep=step;
+  if(piece) pmPiece=piece;
+  if(color) pmColor=color;
+  if(step===1){pmPiece='';pmColor='';pickerModalSelected=null;}
+  if(step===2){pmColor='';pickerModalSelected=null;}
+  renderPickerModal();
+  updatePmConfirmBtn();
+}
+
+function pmSelectCombo(key){
+  pickerModalSelected=key;
+  renderPickerModal();
+  updatePmConfirmBtn();
+}
+
+function updatePmConfirmBtn(){
+  var btn=document.getElementById('pm-confirm');
+  if(!btn) return;
+  btn.disabled=!pickerModalSelected;
+  btn.style.opacity=pickerModalSelected?'1':'.38';
+}
+
+function doPickerModalConfirm(){
+  if(!pickerModalSelected||!pickerModalDate) return;
+  plan[pickerModalDate]=pickerModalSelected; save(SK_PLAN,plan);
+  closePickerModal();
+  renderTodayScreen();
+  if(screen==='today') renderTodayScreen();
+  showToast('Outfit planned ✓');
+}
+
+// ══ NAV ═══════════════════════════════════════════════════════════════════
+var screen = 'closet';
+function goScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  screen=name;
+  if(name==='closet')  renderCloset();
+  if(name==='combos')  renderCombosScreen();
+  if(name==='suggest') renderSuggestions();
+  if(name==='today')   renderTodayScreen();
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ══ INIT ══════════════════════════════════════════════════════════════════
+renderCloset();
+</script>
+</body>
+</html>
