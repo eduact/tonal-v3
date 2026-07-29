@@ -903,23 +903,43 @@ function daysSince(ds){if(!ds)return Infinity;return Math.floor((Date.now()-new 
 function buildContext(targetDate, extraPlanDates){
   var entries=[];
   var combos=generateCombos();
-  combos.forEach(c=>{
-    getWears(c.key).forEach(d=>entries.push({key:c.key,trouser:c.trousers,jacket:c.jacket,date:d}));
+  combos.forEach(function(c){
+    getWears(c.key).forEach(function(d){
+      entries.push({key:c.key, trouser:c.trousers, jacket:c.jacket,
+                    colors:[c.trousers,c.shoes,c.shirt,c.jacket], date:d});
+    });
   });
-  if(extraPlanDates) extraPlanDates.forEach(pd=>{
+  if(extraPlanDates) extraPlanDates.forEach(function(pd){
     if(plan[pd]){
-      var c=combos.find(x=>x.key===plan[pd]);
-      if(c) entries.push({key:c.key,trouser:c.trousers,jacket:c.jacket,date:pd});
+      var c=combos.find(function(x){return x.key===plan[pd];});
+      if(c) entries.push({key:c.key, trouser:c.trousers, jacket:c.jacket,
+                          colors:[c.trousers,c.shoes,c.shirt,c.jacket], date:pd});
     }
   });
-  entries.sort((a,b)=>b.date<a.date?-1:b.date>a.date?1:0);
-  return entries.filter(e=>e.date<=targetDate).slice(0,5);
+  entries.sort(function(a,b){return b.date<a.date?-1:b.date>a.date?1:0;});
+  return entries.filter(function(e){return e.date<=targetDate;}).slice(0,5);
+}
+
+function sharedColorCount(colorsA, colorsB){
+  // Count how many colors appear in both outfits (regardless of piece)
+  var count = 0;
+  for(var i=0;i<colorsA.length;i++){
+    if(colorsB.indexOf(colorsA[i]) !== -1) count++;
+  }
+  return count;
 }
 
 function blockReason(combo, ctx){
-  for(var e of ctx){
+  var comboColors = [combo.trousers, combo.shoes, combo.shirt, combo.jacket];
+  for(var i=0;i<ctx.length;i++){
+    var e = ctx[i];
+    // Hard block: same trouser or same jacket
     if(e.trouser===combo.trousers) return 'Same trousers as recent outfit';
     if(e.jacket===combo.jacket)    return 'Same jacket as recent outfit';
+    // Palette block: 3 or more shared colors = too similar overall
+    if(e.colors && sharedColorCount(comboColors, e.colors) >= 3){
+      return 'Too similar to a recent outfit';
+    }
   }
   return null;
 }
